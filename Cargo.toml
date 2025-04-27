@@ -1,0 +1,26 @@
+[package]
+name = "tide"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# GUI
+iced = { version = "0.13.1", features = ["image", "svg"] }
+rfd = { version = "0.15.3", features = ["xdg-portal"] }
+iced_aw = { version = "0.12.2", features = ["menu", "selection_list"] }
+open = "5.3.2"
+iced_core = "0.13.2"
+# CONFIG
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.8.20"
+dirs-next = "2.0.0"
+# TYPST
+typst = "0.13.1"
+typst-pdf = "0.13.1"
+typst-svg = "0.13.1"
+typst-ide = "0.13.1"
+chrono = "0.4.40"#for the today() world method (Typst date/time)
+
+[dev-dependencies]
+# ASYNC TESTS
+tokio = { version = "1.44.2", features = ["macros", "rt"] }
