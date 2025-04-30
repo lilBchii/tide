@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["export_svg","generate_svg","preview_svg","write_svg"]};

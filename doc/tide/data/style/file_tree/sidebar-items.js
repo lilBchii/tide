@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["main_style","selected_file","svg_icon"]};

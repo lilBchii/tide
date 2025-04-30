@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["color_to_hex","hex_to_color"],"mod":["color_serde","color_serde_maybe"]};

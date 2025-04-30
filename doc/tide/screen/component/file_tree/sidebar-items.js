@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["HEIGHT","INDENT","SPACING"],"enum":["Message"],"fn":["dir_button","icon_button"],"static":["BIB_ICON","DELETE_ICON","DIR_ICON","GENERIC_FILE","IMAGE_ICON","MARK_MAIN","SVG_ICON","UNKNOWN_ICON"],"struct":["Dir","File","FileTree"]};

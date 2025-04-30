@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MODAL_BUTTON_HEIGHT","MODAL_BUTTON_WIDTH"],"enum":["Message"],"struct":["FileModal","ProjectModal"]};

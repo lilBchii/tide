@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["export_pdf","generate_pdf","write_pdf"]};

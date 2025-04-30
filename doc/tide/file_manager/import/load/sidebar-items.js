@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ImportedFile"],"fn":["load_file","load_repo","load_source_file","recurse_compatible_files"]};

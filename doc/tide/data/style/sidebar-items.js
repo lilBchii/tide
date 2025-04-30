@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["button","debug","editor","file_tree","modal","pop_up","tooltip"]};

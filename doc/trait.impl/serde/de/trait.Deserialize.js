@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["tide",[["impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.219/serde/de/trait.Deserialize.html\" title=\"trait serde::de::Deserialize\">Deserialize</a>&lt;'de&gt; for <a class=\"struct\" href=\"tide/data/config/appearance/struct.ColorsConfig.html\" title=\"struct tide::data::config::appearance::ColorsConfig\">ColorsConfig</a>"],["impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.219/serde/de/trait.Deserialize.html\" title=\"trait serde::de::Deserialize\">Deserialize</a>&lt;'de&gt; for <a class=\"struct\" href=\"tide/data/config/appearance/struct.Config.html\" title=\"struct tide::data::config::appearance::Config\">Config</a>"],["impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.219/serde/de/trait.Deserialize.html\" title=\"trait serde::de::Deserialize\">Deserialize</a>&lt;'de&gt; for <a class=\"struct\" href=\"tide/data/config/appearance/struct.EditorConfig.html\" title=\"struct tide::data::config::appearance::EditorConfig\">EditorConfig</a>"],["impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.219/serde/de/trait.Deserialize.html\" title=\"trait serde::de::Deserialize\">Deserialize</a>&lt;'de&gt; for <a class=\"struct\" href=\"tide/data/config/appearance/struct.GeneralConfig.html\" title=\"struct tide::data::config::appearance::GeneralConfig\">GeneralConfig</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1359]}
