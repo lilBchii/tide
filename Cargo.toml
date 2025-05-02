@@ -2,6 +2,7 @@
 name = "tide"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/lilbBchii/tide"
 
 [dependencies]
 # GUI
@@ -24,3 +25,8 @@ chrono = "0.4.40"#for the today() world method (Typst date/time)
 [dev-dependencies]
 # ASYNC TESTS
 tokio = { version = "1.44.2", features = ["macros", "rt"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
