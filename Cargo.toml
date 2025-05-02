@@ -2,7 +2,7 @@
 name = "tide"
 version = "0.1.2-alpha"
 edition = "2021"
-repository = "https://github.com/lilbBchii/tide"
+repository = "https://github.com/lilBchii/tide"
 
 [dependencies]
 # GUI
