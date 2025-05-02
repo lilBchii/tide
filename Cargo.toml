@@ -1,6 +1,6 @@
 [package]
 name = "tide"
-version = "0.1.2-alpha"
+version = "0.1.0-alpha"
 edition = "2021"
 repository = "https://github.com/lilBchii/tide"
 
