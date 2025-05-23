@@ -1,9 +1,9 @@
+use crate::file_manager::export::ExportType;
 use crate::screen::{component::toolbar, editing};
 use iced::{
     keyboard::{key, Key},
     widget::text_editor::{Binding, KeyPress, Motion},
 };
-use crate::file_manager::export::ExportType;
 
 /// Maps key presses to editor bindings.
 /// Returns an optional [`Binding`] corresponding to the key combination to a [`editing::Message`].
@@ -24,7 +24,7 @@ pub fn bindings(key_press: KeyPress) -> Option<Binding<editing::Message>> {
         Key::Named(key::Named::Tab) => Some(Binding::Sequence(vec![Binding::Insert(' '); 4])),
         Key::Character("s") if key_press.modifiers.command() => Some(Binding::Sequence(vec![
             Binding::Custom(editing::Message::ToolBar(toolbar::Message::ForcePreview)),
-            Binding::Custom(editing::Message::ToolBar(toolbar::Message::SaveFile(false)))
+            Binding::Custom(editing::Message::ToolBar(toolbar::Message::SaveFile(false))),
         ])),
 
         Key::Named(key::Named::ArrowRight)
@@ -49,9 +49,11 @@ pub fn bindings(key_press: KeyPress) -> Option<Binding<editing::Message>> {
             Binding::Enter,
         ])),
         Key::Character("e") if key_press.modifiers.command() => Some(Binding::Custom(
-            editing::Message::ToolBar(toolbar::Message::Export(ExportType::PDF),))),
-        Key::Named(key::Named::Space)
-            if key_press.modifiers.command() => Some(Binding::Custom(editing::Message::Autocomplete)),
+            editing::Message::ToolBar(toolbar::Message::Export(ExportType::PDF)),
+        )),
+        Key::Named(key::Named::Space) if key_press.modifiers.command() => {
+            Some(Binding::Custom(editing::Message::Autocomplete))
+        }
         _ => Binding::from_key_press(key_press),
     }
 }

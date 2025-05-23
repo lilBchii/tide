@@ -1,10 +1,10 @@
+use crate::file_manager::export::compile_document;
+use crate::file_manager::export::errors::ExportError;
+use crate::world::TideWorld;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use typst::layout::PagedDocument;
 use typst_svg::svg;
-use crate::file_manager::export::compile_document;
-use crate::file_manager::export::errors::ExportError;
-use crate::world::TideWorld;
 
 /// Exports each page of the compiled Typst document as an individual SVG file.
 ///

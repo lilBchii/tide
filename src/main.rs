@@ -1,3 +1,5 @@
+use std::env;
+
 use iced::{widget::container, Element, Settings, Task, Theme};
 
 mod data;
@@ -21,6 +23,7 @@ use screen::{
 ///
 /// Loads configuration from a TOML file and launches the application using `iced::application`.
 fn main() -> iced::Result {
+    env::set_var("RUST_BACKTRACE", "1");
     let config = Config::load(get_config_path());
     iced::application("tide", Tide::update, Tide::view)
         .settings(Settings {

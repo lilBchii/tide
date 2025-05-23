@@ -1,9 +1,9 @@
-use std::path::PathBuf;
-use typst::layout::PagedDocument;
-use typst_pdf::{pdf, PdfOptions};
 use crate::file_manager::export::compile_document;
 use crate::file_manager::export::errors::ExportError;
 use crate::world::TideWorld;
+use std::path::PathBuf;
+use typst::layout::PagedDocument;
+use typst_pdf::{pdf, PdfOptions};
 
 /// Exports the compiled document as a PDF at the specified `output_path`.
 ///
@@ -19,7 +19,7 @@ pub async fn export_pdf(
 ) -> Result<PathBuf, ExportError> {
     let document = compile_document(&world)?;
     let pdf_content = generate_pdf(&document, &pdf_options)?;
-    let output_path= output_path.with_extension("pdf");
+    let output_path = output_path.with_extension("pdf");
     write_pdf(output_path.to_str().unwrap(), &pdf_content)?;
     Ok(PathBuf::from(output_path))
 }

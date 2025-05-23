@@ -50,8 +50,12 @@ impl Clone for ExportError {
         match self {
             ExportError::CompilationError(msg) => ExportError::CompilationError(msg.clone()),
             ExportError::PdfGenerationError(msg) => ExportError::PdfGenerationError(msg.clone()),
-            ExportError::FileWriteError(err) => ExportError::FileWriteError(io::Error::new(err.kind(), err.to_string())),
-            ExportError::FileReadError(err) => ExportError::FileReadError(io::Error::new(err.kind(), err.to_string())),
+            ExportError::FileWriteError(err) => {
+                ExportError::FileWriteError(io::Error::new(err.kind(), err.to_string()))
+            }
+            ExportError::FileReadError(err) => {
+                ExportError::FileReadError(io::Error::new(err.kind(), err.to_string()))
+            }
         }
     }
 }

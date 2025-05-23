@@ -1,7 +1,6 @@
 //Credits to the source inspiration: https://github.com/squidowl/halloy/blob/main/data/src/appearance/theme.rs
 use iced::Color;
 
-
 /// Parses a hexadecimal color string (e.g., `#RRGGBB` or `#RRGGBBAA`) into a [`Color`].
 /// `hex` is a string slice containing a 6-digit or 8-digit hexadecimal color with a leading `#`.
 ///

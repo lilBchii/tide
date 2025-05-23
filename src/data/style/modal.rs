@@ -1,6 +1,6 @@
 use iced::{
     border,
-    widget::{container::Style as ContainerStyle, Theme, text::Style as TextStyle},
+    widget::{container::Style as ContainerStyle, text::Style as TextStyle, Theme},
 };
 
 /// Returns the style used for modal windows.
@@ -21,6 +21,6 @@ pub fn modal_style(theme: &Theme) -> ContainerStyle {
 pub fn modal_text_style(theme: &Theme) -> TextStyle {
     let palette = theme.extended_palette();
     TextStyle {
-        color: palette.danger.base.color.into()
+        color: palette.danger.base.color.into(),
     }
 }

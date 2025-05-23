@@ -2,8 +2,8 @@ use super::serialization::color_serde;
 use iced::{theme::Palette, Color, Theme};
 use serde::Deserialize;
 use std::borrow::Cow;
-use std::{collections::HashMap, fs};
 use std::path::PathBuf;
+use std::{collections::HashMap, fs};
 
 /// Default auto-pairing characters used in the editor.
 /// These pairs are automatically inserted when typing in the editor.

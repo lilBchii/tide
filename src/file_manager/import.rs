@@ -6,7 +6,7 @@ pub enum UploadType {
     /// Allows importing all supported file types (Typst source and assets).
     All,
     /// Restricts import to only Typst source files.
-    Template
+    Template,
 }
 
 /// Supported file extensions for full import (includes source and common asset types).

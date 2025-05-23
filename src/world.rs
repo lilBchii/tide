@@ -1,29 +1,34 @@
 //this file should be moved to a dedicated module
 
+use crate::file_manager::export::errors::ExportError;
 use crate::file_manager::file::{get_fonts_path, get_relative_path};
 use crate::file_manager::import::load::ImportedFile;
+use chrono::{Datelike, FixedOffset, Local, Utc};
 use iced::widget::text_editor::Content;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::fs;
 use std::path::PathBuf;
-use typst::diag::{FileError, FileResult};
+use typst::diag::{FileError, FileResult, Warned};
 use typst::foundations::{Bytes, Datetime};
-use typst::layout::Abs;
+use typst::layout::{Abs, PagedDocument};
 use typst::syntax::{FileId, Source, VirtualPath};
 use typst::text::{Font, FontBook, TextElem, TextSize};
 use typst::utils::LazyHash;
-use typst::{Library, World};
+use typst::{compile, Library, World};
 use typst_ide::IdeWorld;
-use chrono::{Datelike, FixedOffset, Local, Utc};
 
-const LIBERTINUS_SERIF_REGULAR: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Regular.ttf");
+const LIBERTINUS_SERIF_REGULAR: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Regular.ttf");
 const LIBERTINUS_SERIF_BOLD: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Bold.ttf");
 const LIBERTINUS_SERIF_ITALIC: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Italic.ttf");
-const LIBERTINUS_SERIF_BOLD_ITALIC: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-BoldItalic.ttf");
-const LIBERTINUS_SERIF_SEMIBOLD: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Semibold.ttf");
+const LIBERTINUS_SERIF_BOLD_ITALIC: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-BoldItalic.ttf");
+const LIBERTINUS_SERIF_SEMIBOLD: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Semibold.ttf");
 const LIBERTINUS_SERIF_MATH: &[u8] = include_bytes!("../assets/fonts/LibertinusMath-Regular.ttf");
-const LIBERTINUS_SERIF_INITIALS: &[u8] = include_bytes!("../assets/fonts/LibertinusSerifInitials-Regular.ttf");
+const LIBERTINUS_SERIF_INITIALS: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerifInitials-Regular.ttf");
 const NEW_CMM_MATH_REGULAR: &[u8] = include_bytes!("../assets/fonts/NewCMMath-Regular.otf");
 
 /// The typesetting environment for the Tide IDE, implementing the Typst [`World`] trait.
@@ -85,7 +90,6 @@ impl TideWorld {
     /// and sets up the font book and file storage.
     pub fn new(main: FileId, assets: Option<HashMap<FileId, Bytes>>) -> Self {
         let library = LazyHash::new(library());
-
 
         let mut fonts: Vec<Font> = default_fonts();
 
@@ -155,6 +159,28 @@ impl TideWorld {
         self.files.assets.remove(&id);
         self.files.sources.remove(&id);
     }
+
+    /// Compiles the main Typst source in the given [`TideWorld`] into a [`PagedDocument`].
+    ///
+    /// Captures any warnings during compilation and logs them to `stderr`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`ExportError::CompilationError`] if the Typst compilation fails.
+    pub async fn compile_document(self) -> Result<PagedDocument, ExportError> {
+        println!("compiling...");
+        let Warned { output, warnings } = compile(&self);
+        if !warnings.is_empty() {
+            eprintln!("Typst warnings: {:?}", warnings);
+        }
+        println!("OK");
+        output.map_err(|e| {
+            ExportError::CompilationError(format!(
+                "{:?}",
+                e.iter().map(|s| s.message.clone()).collect::<Vec<_>>()
+            ))
+        })
+    }
 }
 
 impl World for TideWorld {
@@ -220,8 +246,8 @@ impl World for TideWorld {
             Some(hours) => {
                 let seconds = i32::try_from(hours).ok()?.checked_mul(3600)?;
                 now.with_timezone(&FixedOffset::east_opt(seconds)?)
-            },
-            None => now.with_timezone(&Local).fixed_offset()
+            }
+            None => now.with_timezone(&Local).fixed_offset(),
         };
 
         Datetime::from_ymd(
@@ -307,10 +333,7 @@ pub mod tests {
     pub fn init_world() -> TideWorld {
         let main_file_id = FileId::new(None, VirtualPath::new("main"));
         let mut world = TideWorld::new(main_file_id, None);
-        let main = Source::new(
-            main_file_id,
-            String::from("= Hello World")
-        );
+        let main = Source::new(main_file_id, String::from("= Hello World"));
         world.add_source(main_file_id, main);
 
         world
@@ -347,7 +370,10 @@ pub mod tests {
 
         let new_file_id = FileId::new(None, VirtualPath::new("new_file.typ"));
         let asset_file_id = FileId::new(None, VirtualPath::new("fake_asset.svg"));
-        world.add_source(new_file_id, Source::new(new_file_id, String::from("*test*")));
+        world.add_source(
+            new_file_id,
+            Source::new(new_file_id, String::from("*test*")),
+        );
         assert!(world.source(new_file_id).is_ok());
         world.add_asset(asset_file_id, Bytes::from_string("fake SVG"));
         assert!(world.file(asset_file_id).is_ok());
@@ -364,7 +390,10 @@ pub mod tests {
         assert_eq!(world.main(), world.main);
 
         let new_file_id = FileId::new(None, VirtualPath::new("new_file.typ"));
-        world.add_source(new_file_id, Source::new(new_file_id, String::from("*test*")));
+        world.add_source(
+            new_file_id,
+            Source::new(new_file_id, String::from("*test*")),
+        );
         world.change_main(new_file_id);
         assert_eq!(world.main(), new_file_id);
     }
@@ -377,6 +406,9 @@ pub mod tests {
 
         world.reload_source_from_content(world.main(), &Content::with_text("= Text modified"));
         assert!(world.source(world.main()).is_ok());
-        assert_eq!(world.source(world.main()).unwrap().text(), "= Text modified\n"); //unwrap() is ok because of the test above
+        assert_eq!(
+            world.source(world.main()).unwrap().text(),
+            "= Text modified\n"
+        ); //unwrap() is ok because of the test above
     }
 }

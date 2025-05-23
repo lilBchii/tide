@@ -2,14 +2,14 @@ use super::component::{
     debug,
     file_tree::{self, FileTree},
     modal, pop_up,
-    preview::Preview,
+    preview::{self, Preview},
     status_bar::status_bar_view,
     toolbar::{self, editing_toolbar, open_url},
 };
 
 use crate::file_manager::export::errors::ExportError;
 use crate::file_manager::export::pdf::export_pdf;
-use crate::file_manager::export::svg::{export_svg, preview_svg};
+use crate::file_manager::export::svg::export_svg;
 use crate::file_manager::export::template::export_template;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::file::{
@@ -32,7 +32,7 @@ use iced::Length::Fixed;
 use iced::{
     advanced::svg::Handle,
     widget::{
-        column, stack, svg,
+        column, stack,
         text_editor::{Action, Binding, Motion},
         Column, Scrollable, TextEditor,
     },
@@ -47,9 +47,9 @@ use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
-use typst::ecow::EcoString;
 use typst::syntax::{FileId, VirtualPath};
 use typst::World;
+use typst::{ecow::EcoString, layout::PagedDocument};
 use typst_ide::Completion;
 use typst_pdf::PdfOptions;
 
@@ -85,6 +85,8 @@ pub struct Editing {
     file_modal: FileModal,
     /// Modal window for creating a new project.
     project_modal: ProjectModal,
+    /// Precompiled Typst docucument
+    document: Option<PagedDocument>,
 }
 
 impl Editing {
@@ -100,12 +102,13 @@ impl Editing {
             file_tree: FileTree::new(current_dir.to_path_buf()),
             typst: init_world(),
             auto_pairs: config.auto_pairs,
-            split_at: (250.0, 800.0),
+            split_at: (150.0, 700.0),
             autocompletion_ctx: AutocompletionContext::new(),
             pop_up: None,
             debug: None,
             file_modal: FileModal::new(current_dir.to_path_buf()),
             project_modal: ProjectModal::new(),
+            document: None,
         }
     }
 
@@ -256,21 +259,11 @@ impl Editing {
             .split_at(split_left)
             .on_resize(Message::ResizeTree); //VSplit without preview
 
-        if let Some(svg_handles) = &self.preview.handle {
-            let mut svg_pages = vec![];
-            for page in svg_handles.to_owned() {
-                svg_pages.push(svg(page).into());
-            }
-            let preview = Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
-                .width(Fill)
-                .height(Fill);
-            main_screen = VSplit::new(main_screen, preview)
-                .strategy(crate::widgets::vsplit::Strategy::Left)
-                .split_at(split_right)
-                .on_resize(Message::ResizePreview);
-        } //VSplit with preview
-
-        //--------//
+        let preview = self.preview.view().map(Message::Preview);
+        main_screen = VSplit::new(main_screen, preview)
+            .strategy(crate::widgets::vsplit::Strategy::Left)
+            .split_at(split_right)
+            .on_resize(Message::ResizePreview);
 
         let status_bar = status_bar_view(
             cursor_pos,
@@ -419,7 +412,7 @@ impl Editing {
             Message::ActionPerformed(action) => {
                 let is_edit = action.is_edit();
                 self.current.buffer.content.perform(action);
-                if self.current.buffer.is_saved && is_edit {
+                if is_edit && self.current.buffer.is_saved {
                     self.current.buffer.is_saved = false;
                 }
                 Task::none()
@@ -443,9 +436,10 @@ impl Editing {
                 }
             }
             Message::PreviewLoaded(svg_handles) => {
-                println!("async: preview loaded");
-                self.preview.handle = Some(svg_handles);
-                Task::done(Message::DebugSpace(debug::Message::HideErrors))
+                // println!("async: preview loaded");
+                // self.preview.handle = Some(svg_handles);
+                // Task::done(Message::DebugSpace(debug::Message::HideErrors))
+                Task::none()
             }
             Message::ToolBar(message) => {
                 match message {
@@ -467,10 +461,13 @@ impl Editing {
                         )))
                     }
                     toolbar::Message::ForcePreview => {
+                        println!("updating source...");
                         if let Some(id) = self.current_file_id() {
                             self.update_source(id, self.current_buffer().clone());
+                            println!("OK");
                         }
-                        Task::perform(preview_svg(self.typst.clone()), Message::SvgGenerated)
+                        Task::done(Message::CompileDocument)
+                        // Task::perform(preview_svg(self.typst.clone()), Message::SvgGenerated)
                     }
                     toolbar::Message::SaveFile(update) => {
                         if let Some(id) = self.current_file_id() {
@@ -731,8 +728,6 @@ impl Editing {
                     file_tree::Message::ChangeMainFile(path) => {
                         match TideWorld::id_from_path(&path, &self.current_dir) {
                             Some(new_main_id) => {
-                                println!("new main file: {:?}", new_main_id);
-                                //self.tool_bar.main_file_text = format!("{:?}", new_main_id.vpath());
                                 self.typst.change_main(new_main_id);
                                 self.file_tree.change_main(&path);
                                 return Task::batch([
@@ -787,6 +782,35 @@ impl Editing {
                 self.create_file(path);
                 Task::none()
             }
+            Message::Preview(message) => {
+                if let Some(document) = &self.document {
+                    self.preview.update(message, document).map(Message::Preview)
+                } else {
+                    println!("no doc");
+                    Task::none()
+                }
+            }
+            Message::ReloadPreview => {
+                if self.document.is_some() {
+                    return Task::done(Message::Preview(preview::Message::ReloadPages));
+                }
+                println!("error fetching");
+                Task::none()
+            }
+            Message::CompileDocument => Task::perform(self.typst.clone().compile_document(), |r| {
+                Message::DocumentCompiled(r)
+            }),
+            Message::DocumentCompiled(result) => match result {
+                Ok(document) => {
+                    self.document = Some(document);
+                    println!("doc successfully updated");
+                    Task::done(Message::ReloadPreview)
+                }
+                Err(e) => {
+                    println!("compile error : {}", e);
+                    Task::none()
+                }
+            },
         }
     }
 }
@@ -945,6 +969,10 @@ pub enum Message {
     FileModal(modal::Message),
     /// A message emitted by the "new project" modal.
     ProjectModal(modal::Message),
+    Preview(preview::Message),
+    ReloadPreview,
+    CompileDocument,
+    DocumentCompiled(Result<PagedDocument, ExportError>),
 }
 
 #[cfg(test)]

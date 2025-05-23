@@ -73,7 +73,9 @@ fn retrieve_env_path() -> Option<PathBuf> {
         }
         let templates_path = path.join("templates");
         let fonts_path = path.join("fonts");
-        if let Err(e) = fs::create_dir_all(&templates_path).and_then(|_| fs::create_dir_all(&fonts_path)) {
+        if let Err(e) =
+            fs::create_dir_all(&templates_path).and_then(|_| fs::create_dir_all(&fonts_path))
+        {
             eprintln!("Error when creating templates directory: {}", e);
         } else {
             println!("Tide env, templates and font repositories created!");
@@ -140,12 +142,17 @@ pub fn get_recent_paths() -> Vec<ProjectCache> {
                 for line in contents.lines() {
                     let elements: Vec<&str> = line.split(",").collect();
                     let root_path = PathBuf::from(elements[0]);
-                    let main = if elements.len() < 2 || elements[1] == "?" { None }
-                        else { Some(PathBuf::from(elements[1])) };
+                    let main = if elements.len() < 2 || elements[1] == "?" {
+                        None
+                    } else {
+                        Some(PathBuf::from(elements[1]))
+                    };
                     paths.push(ProjectCache::new(root_path, main));
                 }
             }
-            Err(e) => { println!("Error reading cache: {}", e); }
+            Err(e) => {
+                println!("Error reading cache: {}", e);
+            }
         }
     }
 
@@ -159,7 +166,9 @@ pub fn get_recent_paths() -> Vec<ProjectCache> {
 /// The cache is persisted to disk inside the Tide environment directory.
 pub async fn cache_project(project: ProjectCache) {
     let mut projects = get_recent_paths();
-    if projects.len() > MAX_CACHED_PROJECTS-1 { projects.pop(); } //we keep the last 5 projects
+    if projects.len() > MAX_CACHED_PROJECTS - 1 {
+        projects.pop();
+    } //we keep the last 5 projects
     projects.retain(|p| *p.root_path != project.root_path); //remove the project if it's already in cache
     projects.insert(0, project); //add to cache
 
@@ -167,24 +176,40 @@ pub async fn cache_project(project: ProjectCache) {
         let cache = env_path.join("recent.cache");
         if !cache.exists() {
             match fs::File::create(&cache) {
-                Ok(_) => { println!("Cache file created as it didn't exist"); }
-                Err(e) => { println!("Can't create cache file: {e}, abort"); return; }
+                Ok(_) => {
+                    println!("Cache file created as it didn't exist");
+                }
+                Err(e) => {
+                    println!("Can't create cache file: {e}, abort");
+                    return;
+                }
             }
         }
         if cache.exists() && cache.is_file() {
-            match fs::write(&cache, projects
+            match fs::write(
+                &cache,
+                projects
                     .iter()
-                    .map(|p|
-                        format!["{},{}",
-                                p.root_path.display().to_string(),
-                                p.main.to_owned().unwrap_or(PathBuf::from("?"))
-                                    .display().to_string()]
-                    )
+                    .map(|p| {
+                        format![
+                            "{},{}",
+                            p.root_path.display().to_string(),
+                            p.main
+                                .to_owned()
+                                .unwrap_or(PathBuf::from("?"))
+                                .display()
+                                .to_string()
+                        ]
+                    })
                     .collect::<Vec<String>>()
-                    .join("\n")
-                ) {
-                Ok(_) => { println!("Project cached into recent files!"); }
-                Err(e) => { println!("Error writing cache: {}", e); }
+                    .join("\n"),
+            ) {
+                Ok(_) => {
+                    println!("Project cached into recent files!");
+                }
+                Err(e) => {
+                    println!("Error writing cache: {}", e);
+                }
             }
         }
     }
@@ -259,7 +284,11 @@ mod tests {
 
     impl Debug for ProjectCache {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "ProjectCache {{ root_path: {:?}, main: {:?} }}", self.root_path, self.main)
+            write!(
+                f,
+                "ProjectCache {{ root_path: {:?}, main: {:?} }}",
+                self.root_path, self.main
+            )
         }
     }
 
@@ -298,41 +327,51 @@ mod tests {
     fn clear_cache() -> Result<(), std::io::Error> {
         if let Some(env_path) = retrieve_env_path() {
             let cache = env_path.join("recent.cache");
-            if cache.exists() { fs::remove_file(&cache)?; }
+            if cache.exists() {
+                fs::remove_file(&cache)?;
+            }
         }
         Ok(())
     }
 
     #[test]
     fn test_get_relative_path() {
-        assert_eq!(get_relative_path(
-            &fake_user!("project/"),
-            &fake_user!("project/sub_dir/file.typ")
-        ), Some(PathBuf::from("/sub_dir/file.typ"))
+        assert_eq!(
+            get_relative_path(
+                &fake_user!("project/"),
+                &fake_user!("project/sub_dir/file.typ")
+            ),
+            Some(PathBuf::from("/sub_dir/file.typ"))
         );
-        assert_eq!(get_relative_path(
-            &fake_user!("project/"),
-            &fake_user!("project/file.typ")
-        ), Some(PathBuf::from("/file.typ"))
+        assert_eq!(
+            get_relative_path(&fake_user!("project/"), &fake_user!("project/file.typ")),
+            Some(PathBuf::from("/file.typ"))
         );
-        assert_eq!(get_relative_path(
-            &fake_user!("project/"),
-            &fake_user!("project/")
-        ), Some(PathBuf::from("/"))
+        assert_eq!(
+            get_relative_path(&fake_user!("project/"), &fake_user!("project/")),
+            Some(PathBuf::from("/"))
         );
-        assert_eq!(get_relative_path(
-            &fake_user!("project/"),
-            &fake_user!("other_project/file.typ")
-        ), None
+        assert_eq!(
+            get_relative_path(
+                &fake_user!("project/"),
+                &fake_user!("other_project/file.typ")
+            ),
+            None
         );
     }
 
     #[tokio::test]
     async fn test_cache_project() {
         let project_a = ProjectCache::new(fake_user!("project_a/"), None);
-        let project_b = ProjectCache::new(fake_user!("project_b/"), Some(fake_user!("project_b/main.typ")));
+        let project_b = ProjectCache::new(
+            fake_user!("project_b/"),
+            Some(fake_user!("project_b/main.typ")),
+        );
         let project_c = ProjectCache::new(fake_user!("project_c/"), None);
-        let project_d = ProjectCache::new(fake_user!("project_d/"), Some(fake_user!("project_d/hello.typ")));
+        let project_d = ProjectCache::new(
+            fake_user!("project_d/"),
+            Some(fake_user!("project_d/hello.typ")),
+        );
         let project_e = ProjectCache::new(fake_user!("project_e/"), None);
         let project_f = ProjectCache::new(fake_user!("project_f/"), None);
 
@@ -351,7 +390,7 @@ mod tests {
             cache_project(project_a.clone()).await;
             assert!(check_cached_projects(0, &project_a));
             assert_eq!(get_recent_paths().len(), 4); //a, d, c, b
-            //cache 1 more project, the latest is 'project_e'
+                                                     //cache 1 more project, the latest is 'project_e'
             cache_project(project_e.clone()).await;
             assert!(check_cached_projects(0, &project_e));
             //cache 1 more project, the latest is 'project_c'
@@ -370,7 +409,10 @@ mod tests {
     #[tokio::test]
     async fn test_save_disk() {
         assert!(create_test_file().await.is_ok());
-        assert!(check_file_saved(TEST_FILE_NAME, String::from(TEST_CONTENT).add("\n")));
+        assert!(check_file_saved(
+            TEST_FILE_NAME,
+            String::from(TEST_CONTENT).add("\n")
+        ));
     }
 
     #[tokio::test]
@@ -379,7 +421,11 @@ mod tests {
         let file_path = project_root_path.join(TEST_FILE_NAME);
         //if the file doesn't exist, we create it and then delete it ; if it does, we delete it
         if file_path.try_exists().unwrap_or(false) || create_test_file().await.is_ok() {
-            assert!(delete_file_from_disk(FileId::new(None, VirtualPath::new(TEST_FILE_NAME)), project_root_path).is_ok());
+            assert!(delete_file_from_disk(
+                FileId::new(None, VirtualPath::new(TEST_FILE_NAME)),
+                project_root_path
+            )
+            .is_ok());
         } else {
             panic!("Can't create test file");
         }

@@ -20,7 +20,8 @@ typst = "0.13.1"
 typst-pdf = "0.13.1"
 typst-svg = "0.13.1"
 typst-ide = "0.13.1"
-chrono = "0.4.40"#for the today() world method (Typst date/time)
+typst-render = "0.13.1"
+chrono = "0.4.40"
 
 [dev-dependencies]
 # ASYNC TESTS
