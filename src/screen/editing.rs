@@ -13,8 +13,8 @@ use crate::file_manager::export::svg::{export_svg, preview_svg};
 use crate::file_manager::export::template::export_template;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::file::{
-    cache_project, get_templates_path, load_file_dialog, save_file_dialog, save_file_disk,
-    ProjectCache,
+    cache_project, get_templates_path, load_file_dialog, save_file_dialog,
+    save_file_disk, ProjectCache,
 };
 use crate::file_manager::import::{UploadType, ALL_TYPES, TEMPLATE};
 use crate::screen::component::debug::DebugZone;
@@ -22,8 +22,12 @@ use crate::screen::component::modal::{FileModal, ProjectModal};
 use crate::screen::component::pop_up::{PopUpElement, PopUpType};
 use crate::widgets::vsplit::VSplit;
 use crate::world::TideWorld;
-use crate::{data::config::appearance::EditorConfig, file_manager::file::load_repo_dialog};
-use crate::{editor::autocomplete::autocomplete, file_manager::file::delete_file_from_disk};
+use crate::{
+    data::config::appearance::EditorConfig, file_manager::file::load_repo_dialog,
+};
+use crate::{
+    editor::autocomplete::autocomplete, file_manager::file::delete_file_from_disk,
+};
 use crate::{editor::bindings::bindings, file_manager::import::load::load_repo};
 use crate::{editor::buffer::Buffer, file_manager::import::load::load_file};
 use iced::widget::center;
@@ -91,7 +95,10 @@ impl Editing {
     /// Creates a new [`Editing`] instance with the given configuration and directory.
     ///
     /// Initializes the Typst world, file tree, and UI context.
-    pub fn new(config: EditorConfig, current_dir: PathBuf) -> Self {
+    pub fn new(
+        config: EditorConfig,
+        current_dir: PathBuf,
+    ) -> Self {
         Self {
             current: Current::empty(),
             buffers: HashMap::new(),
@@ -122,7 +129,11 @@ impl Editing {
     /// Updates the Typst source and in-memory buffer for the given file.
     ///
     /// Replaces the buffer's content and reloads the source in the Typst world.
-    fn update_source(&mut self, id: FileId, buffer: Buffer) {
+    fn update_source(
+        &mut self,
+        id: FileId,
+        buffer: Buffer,
+    ) {
         println!("updating source for {:?}", id);
         self.typst.reload_source_from_content(id, &buffer.content);
         if let Some(buf) = self.buffers.get_mut(&id) {
@@ -136,7 +147,10 @@ impl Editing {
     }
 
     /// Closes the buffer associated with the given [`FileId`].
-    fn close_buffer(&mut self, id: FileId) {
+    fn close_buffer(
+        &mut self,
+        id: FileId,
+    ) {
         self.buffers.remove(&id);
     }
 
@@ -146,7 +160,10 @@ impl Editing {
     /// # Errors
     ///
     /// Returns an [`Error`] if the file could not be deleted.
-    fn delete_file(&mut self, id: FileId) -> Result<(), Error> {
+    fn delete_file(
+        &mut self,
+        id: FileId,
+    ) -> Result<(), Error> {
         //remove file from disk
         delete_file_from_disk(id, self.current_dir.clone())?;
         //remove file from buffer
@@ -164,7 +181,10 @@ impl Editing {
     /// # Errors
     ///
     /// Returns an [`Error`] if the file cannot be read or written.
-    fn upload_file(&mut self, path: &PathBuf) -> Result<(), Error> {
+    fn upload_file(
+        &mut self,
+        path: &PathBuf,
+    ) -> Result<(), Error> {
         //retrieve content and file name
         let file_content = fs::read(path)?;
         let file_path = self
@@ -183,7 +203,10 @@ impl Editing {
     }
 
     /// Attempts to create a new empty file at the specified path and uploads it into the project.
-    fn create_file(&mut self, path: PathBuf) {
+    fn create_file(
+        &mut self,
+        path: PathBuf,
+    ) {
         if let Err(e) = fs::File::create(&path) {
             eprintln!("Error when creating the file : {}", e);
         }
@@ -199,7 +222,8 @@ impl Editing {
     /// and optional modals or pop-ups.
     pub fn view(&self) -> Element<Message> {
         //let tool_bar = self.tool_bar.view().map(Message::ToolBar);
-        let tool_bar = editing_toolbar(Some(self.typst.main().vpath())).map(Message::ToolBar);
+        let tool_bar =
+            editing_toolbar(Some(self.typst.main().vpath())).map(Message::ToolBar);
         let editor = TextEditor::new(&self.current_buffer().content)
             .on_action(Message::ActionPerformed)
             .placeholder("Insert text here or open a new file")
@@ -208,7 +232,9 @@ impl Editing {
                     if let Some(actual_char) = text.chars().nth(0) {
                         if self.auto_pairs.contains_key(&actual_char) {
                             // enclose the selection with the auto pair characters
-                            if let Some(selection) = self.current_buffer().content.selection() {
+                            if let Some(selection) =
+                                self.current_buffer().content.selection()
+                            {
                                 let mut seq: Vec<Binding<Message>> = Vec::new();
                                 seq.push(Binding::Insert(actual_char));
                                 for c in selection.chars() {
@@ -221,7 +247,9 @@ impl Editing {
                             } else {
                                 Some(Binding::Sequence(vec![
                                     Binding::Insert(actual_char),
-                                    Binding::Insert(*self.auto_pairs.get(&actual_char).unwrap()),
+                                    Binding::Insert(
+                                        *self.auto_pairs.get(&actual_char).unwrap(),
+                                    ),
                                     Binding::Move(Motion::Left),
                                 ]))
                             }
@@ -261,9 +289,10 @@ impl Editing {
             for page in svg_handles.to_owned() {
                 svg_pages.push(svg(page).into());
             }
-            let preview = Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
-                .width(Fill)
-                .height(Fill);
+            let preview =
+                Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
+                    .width(Fill)
+                    .height(Fill);
             main_screen = VSplit::new(main_screen, preview)
                 .strategy(crate::widgets::vsplit::Strategy::Left)
                 .split_at(split_right)
@@ -309,22 +338,26 @@ impl Editing {
         } //"new file" modal
 
         if self.project_modal.visible {
-            return stack![screen, self.project_modal.view().map(Message::ProjectModal)].into();
+            return stack![screen, self.project_modal.view().map(Message::ProjectModal)]
+                .into();
         } //"new project" modal
 
         screen.into() //default
     }
 
     /// Updates the editing state in response to a [`Message`] input.
-    pub fn update(&mut self, message: Message) -> Task<Message> {
+    pub fn update(
+        &mut self,
+        message: Message,
+    ) -> Task<Message> {
         match message {
             Message::CachedProject(main) => {
                 println!("Project {:?} cached!", self.current_dir);
                 if let Some(main_path) = main {
                     println!("Main retrieved from cache, change it: {:?}", main_path);
-                    return Task::done(Message::FileTree(file_tree::Message::ChangeMainFile(
-                        main_path,
-                    )));
+                    return Task::done(Message::FileTree(
+                        file_tree::Message::ChangeMainFile(main_path),
+                    ));
                 }
                 Task::none()
             }
@@ -344,13 +377,13 @@ impl Editing {
                     }
                     pop_up::Message::DeleteFile(id) => match self.delete_file(id) {
                         Ok(_) => Task::done(Message::PopUp(pop_up::Message::HidePopUp)),
-                        Err(err) => Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
-                            PopUpElement::new(
+                        Err(err) => Task::done(Message::PopUp(
+                            pop_up::Message::ShowPopUp(PopUpElement::new(
                                 PopUpType::Error,
                                 String::from("Can't delete file!"),
                                 err.to_string(),
-                            ),
-                        ))),
+                            )),
+                        )),
                     },
                 }
             }
@@ -390,11 +423,19 @@ impl Editing {
                 if let Some(current_file_id) = self.current_file_id() {
                     self.update_source(current_file_id, self.current_buffer().clone());
                     let (line, shift) = self.current_buffer().content.cursor_position();
-                    if let Ok(source) = self.typst.source(self.current_file_id().unwrap()) {
+                    if let Ok(source) = self.typst.source(self.current_file_id().unwrap())
+                    {
                         let index = source.line_column_to_byte(line, shift);
                         println!("{:?}", self.typst);
-                        println!("autocompletion for {:?}/len:{}", source, source.len_bytes());
-                        println!("line: {} / shift: {} | index: {:?}", line, shift, index);
+                        println!(
+                            "autocompletion for {:?}/len:{}",
+                            source,
+                            source.len_bytes()
+                        );
+                        println!(
+                            "line: {} / shift: {} | index: {:?}",
+                            line, shift, index
+                        );
                         if let Some(cursor_index) = index {
                             let Some((pos, completions)) =
                                 autocomplete(&self.typst, &source, cursor_index)
@@ -402,7 +443,9 @@ impl Editing {
                                 return Task::none();
                             };
                             self.autocompletion_ctx.cursor = cursor_index;
-                            return Task::done(Message::ShowAutocomplete(pos, completions));
+                            return Task::done(Message::ShowAutocomplete(
+                                pos, completions,
+                            ));
                         }
                     }
                 }
@@ -431,15 +474,16 @@ impl Editing {
                         async move {
                             let mut svg_handles: Vec<Handle> = vec![];
                             for content in svg {
-                                svg_handles.push(Handle::from_memory(content.into_bytes()));
+                                svg_handles
+                                    .push(Handle::from_memory(content.into_bytes()));
                             }
                             svg_handles
                         },
                         Message::PreviewLoaded,
                     ),
-                    Err(err) => Task::done(Message::DebugSpace(debug::Message::ShowErrors(
-                        DebugZone::new(err.to_string()),
-                    ))),
+                    Err(err) => Task::done(Message::DebugSpace(
+                        debug::Message::ShowErrors(DebugZone::new(err.to_string())),
+                    )),
                 }
             }
             Message::PreviewLoaded(svg_handles) => {
@@ -456,13 +500,17 @@ impl Editing {
                             load_file_dialog(&templates_path, "Typst template", &TEMPLATE)
                         {
                             self.project_modal.require_template(template);
-                            return Task::done(Message::ToolBar(toolbar::Message::NewProject));
+                            return Task::done(Message::ToolBar(
+                                toolbar::Message::NewProject,
+                            ));
                         }
                         Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
                             PopUpElement::new(
                                 PopUpType::Warning,
                                 String::from("Project creation cancelled!"),
-                                String::from("We can't create your project without template."),
+                                String::from(
+                                    "We can't create your project without template.",
+                                ),
                             ),
                         )))
                     }
@@ -470,7 +518,10 @@ impl Editing {
                         if let Some(id) = self.current_file_id() {
                             self.update_source(id, self.current_buffer().clone());
                         }
-                        Task::perform(preview_svg(self.typst.clone()), Message::SvgGenerated)
+                        Task::perform(
+                            preview_svg(self.typst.clone()),
+                            Message::SvgGenerated,
+                        )
                     }
                     toolbar::Message::SaveFile(update) => {
                         if let Some(id) = self.current_file_id() {
@@ -483,7 +534,9 @@ impl Editing {
                                     self.current_buffer().clone(),
                                     self.current_dir.clone(),
                                 ), //it should be the Source file...
-                                |result| Message::ToolBar(toolbar::Message::FileSaved(result)),
+                                |result| {
+                                    Message::ToolBar(toolbar::Message::FileSaved(result))
+                                },
                             );
                         }
 
@@ -495,23 +548,28 @@ impl Editing {
                             self.current.buffer.is_saved = true;
                             Task::none()
                         }
-                        Err(err) => Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
-                            PopUpElement::new(
+                        Err(err) => Task::done(Message::PopUp(
+                            pop_up::Message::ShowPopUp(PopUpElement::new(
                                 PopUpType::Error,
                                 String::from("File not saved!"),
                                 err.to_string(),
-                            ),
-                        ))),
+                            )),
+                        )),
                     },
                     toolbar::Message::Upload(upload_type, import_path) => {
-                        let import_path = import_path.unwrap_or(self.current_dir.to_owned());
+                        let import_path =
+                            import_path.unwrap_or(self.current_dir.to_owned());
                         if let Some(path) = match upload_type {
-                            UploadType::All => {
-                                load_file_dialog(&import_path, "Typst files or assets", &ALL_TYPES)
-                            }
-                            UploadType::Template => {
-                                load_file_dialog(&import_path, "Typst template", &TEMPLATE)
-                            }
+                            UploadType::All => load_file_dialog(
+                                &import_path,
+                                "Typst files or assets",
+                                &ALL_TYPES,
+                            ),
+                            UploadType::Template => load_file_dialog(
+                                &import_path,
+                                "Typst template",
+                                &TEMPLATE,
+                            ),
                         } {
                             if let Some(file_name) = path.file_name() {
                                 return if !self.current_dir.join(file_name).exists() {
@@ -520,11 +578,13 @@ impl Editing {
                                             toolbar::Message::FileImported(Ok(path)),
                                         )),
                                         Err(err) => Task::done(Message::PopUp(
-                                            pop_up::Message::ShowPopUp(PopUpElement::new(
-                                                PopUpType::Error,
-                                                String::from("Can't upload file!"),
-                                                err.to_string(),
-                                            )),
+                                            pop_up::Message::ShowPopUp(
+                                                PopUpElement::new(
+                                                    PopUpType::Error,
+                                                    String::from("Can't upload file!"),
+                                                    err.to_string(),
+                                                ),
+                                            ),
                                         )),
                                     }
                                 } else {
@@ -543,13 +603,13 @@ impl Editing {
                             println!("file imported: {:?}", path); //todo: normal pop-up
                             Task::none()
                         }
-                        Err(err) => Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
-                            PopUpElement::new(
+                        Err(err) => Task::done(Message::PopUp(
+                            pop_up::Message::ShowPopUp(PopUpElement::new(
                                 PopUpType::Error,
                                 String::from("File not imported!"),
                                 err.to_string(),
-                            ),
-                        ))),
+                            )),
+                        )),
                     },
                     toolbar::Message::OpenProject(path_option, main) => {
                         let path = match path_option {
@@ -604,74 +664,85 @@ impl Editing {
                         */
                         Task::none()
                     }
-                    toolbar::Message::Export(export_type) => match export_type {
-                        ExportType::PDF => {
-                            let path = save_file_dialog("pdf", &["pdf"]);
-                            if let Some(export_path) = path {
-                                Task::perform(
-                                    export_pdf(
-                                        self.typst.clone(),
-                                        export_path,
-                                        PdfOptions::default(),
-                                    ),
-                                    |result| {
-                                        Message::ToolBar(toolbar::Message::ProjectExported(result))
-                                    },
-                                )
-                            } else {
-                                Task::none() //abort or error
+                    toolbar::Message::Export(export_type) => {
+                        match export_type {
+                            ExportType::PDF => {
+                                let path = save_file_dialog("pdf", &["pdf"]);
+                                if let Some(export_path) = path {
+                                    Task::perform(
+                                        export_pdf(
+                                            self.typst.clone(),
+                                            export_path,
+                                            PdfOptions::default(),
+                                        ),
+                                        |result| {
+                                            Message::ToolBar(
+                                                toolbar::Message::ProjectExported(result),
+                                            )
+                                        },
+                                    )
+                                } else {
+                                    Task::none() //abort or error
+                                }
                             }
-                        }
-                        ExportType::SVG => {
-                            let path = save_file_dialog("svg", &["svg"]);
-                            if let Some(export_path) = path {
-                                Task::perform(
-                                    export_svg(self.typst.clone(), export_path),
-                                    |result| {
-                                        Message::ToolBar(toolbar::Message::ProjectExported(result))
-                                    },
-                                )
-                            } else {
-                                Task::none() //abort or error
+                            ExportType::SVG => {
+                                let path = save_file_dialog("svg", &["svg"]);
+                                if let Some(export_path) = path {
+                                    Task::perform(
+                                        export_svg(self.typst.clone(), export_path),
+                                        |result| {
+                                            Message::ToolBar(
+                                                toolbar::Message::ProjectExported(result),
+                                            )
+                                        },
+                                    )
+                                } else {
+                                    Task::none() //abort or error
+                                }
                             }
-                        }
-                        ExportType::Template => {
-                            let export_path =
-                                get_templates_path().unwrap_or(self.current_dir.to_owned());
-                            let file_path = self.file_tree.selected_path.to_owned();
-                            if let Some(current_path) = file_path {
-                                return Task::perform(
-                                    export_template(current_path, export_path),
-                                    |result| {
-                                        Message::ToolBar(toolbar::Message::ProjectExported(result))
-                                    },
-                                );
-                            }
-                            Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
+                            ExportType::Template => {
+                                let export_path = get_templates_path()
+                                    .unwrap_or(self.current_dir.to_owned());
+                                let file_path = self.file_tree.selected_path.to_owned();
+                                if let Some(current_path) = file_path {
+                                    return Task::perform(
+                                        export_template(current_path, export_path),
+                                        |result| {
+                                            Message::ToolBar(
+                                                toolbar::Message::ProjectExported(result),
+                                            )
+                                        },
+                                    );
+                                }
+                                Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
                                 PopUpElement::new(
                                     PopUpType::Warning,
                                     String::from("No file selected!"),
                                     String::from("Please select a file to export it as template."),
                                 ),
                             )))
+                            }
                         }
-                    },
-                    toolbar::Message::AddTemplate => Task::done(Message::ToolBar(
-                        toolbar::Message::Upload(UploadType::Template, get_templates_path()),
-                    )),
+                    }
+                    toolbar::Message::AddTemplate => {
+                        Task::done(Message::ToolBar(toolbar::Message::Upload(
+                            UploadType::Template,
+                            get_templates_path(),
+                        )))
+                    }
                     toolbar::Message::ProjectExported(result) => match result {
                         //TODO: Status bar
                         Ok(_path) => {
                             println!("Project exported!");
                             Task::none()
                         }
-                        Err(err) => Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
-                            PopUpElement::new(
+                        Err(err) => Task::done(Message::PopUp(
+                            pop_up::Message::ShowPopUp(PopUpElement::new(
                                 PopUpType::Error,
                                 String::from("Project not exported!"),
                                 err.to_string(),
-                            ),
-                        ))),
+                            )),
+                        )),
                     },
                     toolbar::Message::Universe => {
                         open_url("https://typst.app/universe/");
@@ -698,7 +769,9 @@ impl Editing {
                         self.file_tree.fold(&path);
                     }
                     file_tree::Message::ChangeCurrentFile(path) => {
-                        if let Some(id) = TideWorld::id_from_path(&path, &self.current_dir) {
+                        if let Some(id) =
+                            TideWorld::id_from_path(&path, &self.current_dir)
+                        {
                             if let Some(id) = self.current_file_id() {
                                 self.update_source(id, self.current_buffer().clone());
                             }
@@ -743,7 +816,9 @@ impl Editing {
                                         )),
                                         move |_| Message::CachedProject(None),
                                     ),
-                                    Task::done(Message::FileTree(file_tree::Message::FileExit)),
+                                    Task::done(Message::FileTree(
+                                        file_tree::Message::FileExit,
+                                    )),
                                 ]);
                             }
                             None => {
@@ -765,16 +840,20 @@ impl Editing {
                         self.file_tree.change_clicked(Some(path));
                     }
                     file_tree::Message::DeleteFile(path) => {
-                        if let Some(id) = TideWorld::id_from_path(&path, &self.current_dir) {
-                            return Task::done(Message::PopUp(pop_up::Message::ShowPopUp(
-                                PopUpElement::new(
+                        if let Some(id) =
+                            TideWorld::id_from_path(&path, &self.current_dir)
+                        {
+                            return Task::done(Message::PopUp(
+                                pop_up::Message::ShowPopUp(PopUpElement::new(
                                     PopUpType::Confirm(id),
                                     "Want to delete file".to_string(),
                                     path.to_string_lossy().to_string(),
-                                ),
-                            )));
+                                )),
+                            ));
                         }
-                        return Task::done(Message::FileTree(file_tree::Message::FileExit));
+                        return Task::done(Message::FileTree(
+                            file_tree::Message::FileExit,
+                        ));
                     }
                 }
                 Task::none()
@@ -807,7 +886,10 @@ struct Current {
 
 impl Current {
     /// Creates a new [`Current`] from the given buffer and file ID.
-    fn new(buffer: Buffer, file_id: Option<FileId>) -> Self {
+    fn new(
+        buffer: Buffer,
+        file_id: Option<FileId>,
+    ) -> Self {
         Self { buffer, file_id }
     }
 
@@ -820,7 +902,11 @@ impl Current {
     }
 
     /// Sets the current buffer and file ID to the provided values.
-    fn set(&mut self, buffer: Buffer, file_id: FileId) {
+    fn set(
+        &mut self,
+        buffer: Buffer,
+        file_id: FileId,
+    ) {
         self.buffer = buffer;
         self.file_id = Some(file_id);
     }
@@ -870,7 +956,10 @@ impl DisplayableCompletion {
     //therefore, we should remove the first 0, 1, ..., n = cursor-pos characters of the apply/label
     //here, n = 4-1, we remove characters in range 0..(<)3 of "image(${})"
     //this leaves the sub-chain "ge(${})"
-    fn apply_to(&self, ctx: &AutocompletionContext) -> Arc<String> {
+    fn apply_to(
+        &self,
+        ctx: &AutocompletionContext,
+    ) -> Arc<String> {
         let diff = ctx.cursor - ctx.pos;
         let label = self.completion.label.to_owned();
         let apply = self.completion.apply.to_owned().unwrap_or(label);
@@ -880,7 +969,10 @@ impl DisplayableCompletion {
 }
 
 impl Display for DisplayableCompletion {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         let details = self.completion.detail.clone();
         write!(
             f,
@@ -893,7 +985,10 @@ impl Display for DisplayableCompletion {
 }
 
 impl PartialEq<Self> for DisplayableCompletion {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
         self.completion.label == other.completion.label
     }
 }
@@ -901,7 +996,10 @@ impl PartialEq<Self> for DisplayableCompletion {
 impl Eq for DisplayableCompletion {}
 
 impl Hash for DisplayableCompletion {
-    fn hash<H: Hasher>(&self, state: &mut H) {
+    fn hash<H: Hasher>(
+        &self,
+        state: &mut H,
+    ) {
         self.completion.label.hash(state);
     }
 }
@@ -1022,7 +1120,8 @@ mod test {
     #[test]
     fn test_editor_action_performed() {
         let mut editing = create_editing();
-        let _task = editing.update(Message::ActionPerformed(Action::Edit(Edit::Insert('a'))));
+        let _task =
+            editing.update(Message::ActionPerformed(Action::Edit(Edit::Insert('a'))));
         assert_eq!(editing.current.buffer.content.text(), "a\n");
     }
 
@@ -1033,9 +1132,10 @@ mod test {
         editing
             .typst
             .add_source(file_id, Source::new(file_id, String::from(TEST_CONTENT)));
-        let _task = editing.update(Message::FileTree(file_tree::Message::ChangeMainFile(
-            PathBuf::from(TEST_PROJECT_ROOT).join(OTHER_FILE_NAME),
-        )));
+        let _task =
+            editing.update(Message::FileTree(file_tree::Message::ChangeMainFile(
+                PathBuf::from(TEST_PROJECT_ROOT).join(OTHER_FILE_NAME),
+            )));
 
         assert_eq!(
             editing.typst.main().vpath().as_rootless_path(),

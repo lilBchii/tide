@@ -72,7 +72,8 @@ impl FileModal {
             column![
                 text("New File").size(20),
                 vertical_space().height(10),
-                row![text_input("Enter file name", &self.file_name).on_input(Message::FileNamed)],
+                row![text_input("Enter file name", &self.file_name)
+                    .on_input(Message::FileNamed)],
                 text(self.warning_text.clone())
                     .size(15)
                     .color(Color::from_rgb(1.0, 0.0, 0.0)),
@@ -104,7 +105,10 @@ impl FileModal {
     }
 
     /// Handles messages to update the internal state.
-    pub fn update(&mut self, message: Message) -> Task<editing::Message> {
+    pub fn update(
+        &mut self,
+        message: Message,
+    ) -> Task<editing::Message> {
         match message {
             Message::FileCreate => {
                 if !self.file_name.is_empty() {
@@ -173,7 +177,10 @@ impl ProjectModal {
     }
 
     /// Adds the path of a template file to be imported when creating a project.
-    pub fn require_template(&mut self, template_path: PathBuf) {
+    pub fn require_template(
+        &mut self,
+        template_path: PathBuf,
+    ) {
         self.template = Some(template_path);
     }
 
@@ -186,7 +193,8 @@ impl ProjectModal {
             column![
                 text("New Project").size(20),
                 vertical_space().height(10),
-                text_input("Enter project name", &self.project_name).on_input(Message::ProjectName),
+                text_input("Enter project name", &self.project_name)
+                    .on_input(Message::ProjectName),
                 vertical_space().height(20),
                 row![
                     text_input("Enter project absolute path", &self.project_path)
@@ -227,7 +235,10 @@ impl ProjectModal {
     }
 
     /// Handles messages and updates internal state accordingly.
-    pub fn update(&mut self, message: Message) -> Task<toolbar::Message> {
+    pub fn update(
+        &mut self,
+        message: Message,
+    ) -> Task<toolbar::Message> {
         match message {
             Message::ProjectName(name) => {
                 self.project_name = name;
@@ -257,21 +268,26 @@ impl ProjectModal {
                 if !self.project_name.is_empty() {
                     if !self.project_path.is_empty() {
                         let new_project_path =
-                            std::path::PathBuf::from(&self.project_path).join(&self.project_name);
+                            std::path::PathBuf::from(&self.project_path)
+                                .join(&self.project_name);
                         if new_project_path.is_absolute() {
                             if new_project_path.exists() {
-                                self.warning_text = String::from("Project already exists");
+                                self.warning_text =
+                                    String::from("Project already exists");
                             } else {
                                 match self.create_project() {
                                     Ok(path) => {
                                         if path.exists() {
                                             self.hide();
-                                            return Task::done(toolbar::Message::OpenProject(
-                                                Some(path),
-                                                None,
-                                            ));
+                                            return Task::done(
+                                                toolbar::Message::OpenProject(
+                                                    Some(path),
+                                                    None,
+                                                ),
+                                            );
                                         } else {
-                                            self.warning_text = String::from("Project not found");
+                                            self.warning_text =
+                                                String::from("Project not found");
                                         }
                                     }
                                     Err(e) => {

@@ -2,12 +2,13 @@ use super::serialization::color_serde;
 use iced::{theme::Palette, Color, Theme};
 use serde::Deserialize;
 use std::borrow::Cow;
-use std::{collections::HashMap, fs};
 use std::path::PathBuf;
+use std::{collections::HashMap, fs};
 
 /// Default auto-pairing characters used in the editor.
 /// These pairs are automatically inserted when typing in the editor.
-const DEFAULT_AUTO_PAIRS: [(char, char); 4] = [('(', ')'), ('"', '"'), ('[', ']'), ('{', '}')];
+const DEFAULT_AUTO_PAIRS: [(char, char); 4] =
+    [('(', ')'), ('"', '"'), ('[', ']'), ('{', '}')];
 /// Embedded fallback font (Roboto Black) used if no font is found at the configured path.
 const DEFAULT_FONT: &[u8] = include_bytes!("../../../assets/fonts/Roboto-Black.ttf");
 /// Default path to the Roboto Black font on disk.

@@ -2,7 +2,9 @@ use iced::font::Weight::Bold;
 
 use iced::advanced::text::Shaping;
 use iced::advanced::widget::Text;
-use iced::widget::{button, center, container, horizontal_space, opaque, row, text, Column, Row};
+use iced::widget::{
+    button, center, container, horizontal_space, opaque, row, text, Column, Row,
+};
 use iced::{Element, Font, Length};
 use typst::syntax::FileId;
 
@@ -22,7 +24,11 @@ pub struct PopUpElement {
 
 impl PopUpElement {
     /// Creates a new [`PopUpElement`] with the given type, title, and details.
-    pub fn new(pop_type: PopUpType, title: String, details: String) -> Self {
+    pub fn new(
+        pop_type: PopUpType,
+        title: String,
+        details: String,
+    ) -> Self {
         Self {
             pop_type,
             title,
@@ -72,14 +78,13 @@ impl PopUpElement {
 
         opaque(
             center(opaque(
-                container(col)
-                    .width(Length::Shrink)
-                    .padding(10)
-                    .style(match self.pop_type {
+                container(col).width(Length::Shrink).padding(10).style(
+                    match self.pop_type {
                         PopUpType::Warning => warning,
                         PopUpType::Error => error,
                         PopUpType::Confirm(_) => confirm,
-                    }),
+                    },
+                ),
             ))
             .style(darker_bg),
         )

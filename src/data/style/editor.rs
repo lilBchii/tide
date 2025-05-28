@@ -6,7 +6,10 @@ use iced::{
 /// Returns the style for the text editor widget, including background, border, selection, and text colors.
 ///
 /// Reacts to the editor's [`Status`] with color and border adjustments.
-pub fn editor_style(theme: &Theme, status: Status) -> Style {
+pub fn editor_style(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: palette.background.base.color.into(),

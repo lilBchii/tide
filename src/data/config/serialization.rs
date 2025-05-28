@@ -1,7 +1,6 @@
 //Credits to the source inspiration: https://github.com/squidowl/halloy/blob/main/data/src/appearance/theme.rs
 use iced::Color;
 
-
 /// Parses a hexadecimal color string (e.g., `#RRGGBB` or `#RRGGBBAA`) into a [`Color`].
 /// `hex` is a string slice containing a 6-digit or 8-digit hexadecimal color with a leading `#`.
 ///
@@ -84,7 +83,10 @@ pub(crate) mod color_serde {
     /// # Errors
     ///
     /// Returns a `SerDe` serialization error if writing fails.
-    pub fn serialize<S>(color: &Color, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(
+        color: &Color,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -111,7 +113,8 @@ pub(crate) mod color_serde_maybe {
     where
         D: Deserializer<'de>,
     {
-        Ok(Option::<String>::deserialize(deserializer)?.and_then(|hex| super::hex_to_color(&hex)))
+        Ok(Option::<String>::deserialize(deserializer)?
+            .and_then(|hex| super::hex_to_color(&hex)))
     }
 
     /// Serializes an `Option<Color>` as a hexadecimal string if `Some`, or as `null` if `None`.
@@ -119,7 +122,10 @@ pub(crate) mod color_serde_maybe {
     /// # Errors
     ///
     /// Returns a `SerDe` serialization error if writing fails.
-    pub fn serialize<S>(color: &Option<Color>, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(
+        color: &Option<Color>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

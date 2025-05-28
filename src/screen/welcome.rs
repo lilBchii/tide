@@ -7,7 +7,9 @@ use crate::file_manager::import::TEMPLATE;
 use crate::screen::component::modal;
 use crate::screen::component::modal::ProjectModal;
 use iced::advanced::text::Shaping;
-use iced::widget::{horizontal_space, row, stack, svg, text, vertical_space, Button, Text};
+use iced::widget::{
+    horizontal_space, row, stack, svg, text, vertical_space, Button, Text,
+};
 use iced::{
     widget::{column, container},
     Alignment, Element, Length, Task,
@@ -20,8 +22,9 @@ const WELCOME_BUTTON_HEIGHT: u16 = 50;
 const WELCOME_BUTTON_WIDTH: u16 = 200;
 const FILE_BUTTON_HEIGHT: u16 = 30;
 
-pub static LOGO: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("../../assets/icons/logo.svg")));
+pub static LOGO: LazyLock<svg::Handle> = LazyLock::new(|| {
+    svg::Handle::from_memory(include_bytes!("../../assets/icons/logo.svg"))
+});
 
 /// Represents the main _Welcome page_ shown on Tide startup.
 ///
@@ -54,7 +57,10 @@ impl Welcome {
     /// Updates the welcome view based on incoming [`Message`]s.
     ///
     /// Handles interactions such as starting a new project or responding to modal actions.
-    pub fn update(&mut self, message: Message) -> Task<Message> {
+    pub fn update(
+        &mut self,
+        message: Message,
+    ) -> Task<Message> {
         match message {
             Message::ToolBar(message) => match message {
                 toolbar::Message::StartFromTemplate => {
@@ -64,7 +70,9 @@ impl Welcome {
                         &TEMPLATE,
                     ) {
                         self.project_modal.require_template(template);
-                        return Task::done(Message::ToolBar(toolbar::Message::NewProject));
+                        return Task::done(Message::ToolBar(
+                            toolbar::Message::NewProject,
+                        ));
                     }
                     Task::none()
                 }
@@ -156,7 +164,8 @@ impl Welcome {
             vertical_space().height(20),
             start_button,
             vertical_space().height(10),
-            text("More options in “File” button of the tool bar.").shaping(Shaping::Advanced)
+            text("More options in “File” button of the tool bar.")
+                .shaping(Shaping::Advanced)
         ];
         let r = row![
             getting_started,
@@ -179,7 +188,8 @@ impl Welcome {
         ];
 
         if self.project_modal.visible {
-            return stack![screen, self.project_modal.view().map(Message::ProjectModal)].into();
+            return stack![screen, self.project_modal.view().map(Message::ProjectModal)]
+                .into();
         }
 
         screen.into()
@@ -210,7 +220,10 @@ fn welcome_button<'a, Message: Clone + 'a>(
 /// Creates a clickable button representing a recent file or project.
 ///
 /// Displays the project name and path.
-fn file_button<'a, Message: Clone + 'a>(label: String, on_press: Message) -> Element<'a, Message> {
+fn file_button<'a, Message: Clone + 'a>(
+    label: String,
+    on_press: Message,
+) -> Element<'a, Message> {
     Button::new(Text::new(label).shaping(Shaping::Advanced).center())
         .on_press(on_press)
         .padding(WELCOME_BUTTON_PADDING)

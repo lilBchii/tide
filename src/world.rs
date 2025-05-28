@@ -2,6 +2,7 @@
 
 use crate::file_manager::file::{get_fonts_path, get_relative_path};
 use crate::file_manager::import::load::ImportedFile;
+use chrono::{Datelike, FixedOffset, Local, Utc};
 use iced::widget::text_editor::Content;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -15,16 +16,23 @@ use typst::text::{Font, FontBook, TextElem, TextSize};
 use typst::utils::LazyHash;
 use typst::{Library, World};
 use typst_ide::IdeWorld;
-use chrono::{Datelike, FixedOffset, Local, Utc};
 
-const LIBERTINUS_SERIF_REGULAR: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Regular.ttf");
-const LIBERTINUS_SERIF_BOLD: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Bold.ttf");
-const LIBERTINUS_SERIF_ITALIC: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Italic.ttf");
-const LIBERTINUS_SERIF_BOLD_ITALIC: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-BoldItalic.ttf");
-const LIBERTINUS_SERIF_SEMIBOLD: &[u8] = include_bytes!("../assets/fonts/LibertinusSerif-Semibold.ttf");
-const LIBERTINUS_SERIF_MATH: &[u8] = include_bytes!("../assets/fonts/LibertinusMath-Regular.ttf");
-const LIBERTINUS_SERIF_INITIALS: &[u8] = include_bytes!("../assets/fonts/LibertinusSerifInitials-Regular.ttf");
-const NEW_CMM_MATH_REGULAR: &[u8] = include_bytes!("../assets/fonts/NewCMMath-Regular.otf");
+const LIBERTINUS_SERIF_REGULAR: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Regular.ttf");
+const LIBERTINUS_SERIF_BOLD: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Bold.ttf");
+const LIBERTINUS_SERIF_ITALIC: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Italic.ttf");
+const LIBERTINUS_SERIF_BOLD_ITALIC: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-BoldItalic.ttf");
+const LIBERTINUS_SERIF_SEMIBOLD: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerif-Semibold.ttf");
+const LIBERTINUS_SERIF_MATH: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusMath-Regular.ttf");
+const LIBERTINUS_SERIF_INITIALS: &[u8] =
+    include_bytes!("../assets/fonts/LibertinusSerifInitials-Regular.ttf");
+const NEW_CMM_MATH_REGULAR: &[u8] =
+    include_bytes!("../assets/fonts/NewCMMath-Regular.otf");
 
 /// The typesetting environment for the Tide IDE, implementing the Typst [`World`] trait.
 ///
@@ -83,9 +91,11 @@ impl TideWorld {
     ///
     /// Initializes the standard library, loads fonts from disk,
     /// and sets up the font book and file storage.
-    pub fn new(main: FileId, assets: Option<HashMap<FileId, Bytes>>) -> Self {
+    pub fn new(
+        main: FileId,
+        assets: Option<HashMap<FileId, Bytes>>,
+    ) -> Self {
         let library = LazyHash::new(library());
-
 
         let mut fonts: Vec<Font> = default_fonts();
 
@@ -111,30 +121,48 @@ impl TideWorld {
     /// Creates a [`FileId`] from a file system path and project root.
     ///
     /// Returns `None` if the relative path cannot be determined.
-    pub fn id_from_path(path: &PathBuf, root: &PathBuf) -> Option<FileId> {
+    pub fn id_from_path(
+        path: &PathBuf,
+        root: &PathBuf,
+    ) -> Option<FileId> {
         let relative_path = get_relative_path(root, path)?;
         Some(FileId::new(None, VirtualPath::new(relative_path)))
     }
 
     /// Replaces the source content for an existing file in the world.
-    pub fn reload_source_from_content(&mut self, id: FileId, content: &Content) {
+    pub fn reload_source_from_content(
+        &mut self,
+        id: FileId,
+        content: &Content,
+    ) {
         if let Some(source) = self.files.sources.get_mut(&id) {
             source.replace(content.text().as_str());
         }
     }
 
     /// Inserts a new Typst source file into the world.
-    pub fn add_source(&mut self, file_id: FileId, source: Source) {
+    pub fn add_source(
+        &mut self,
+        file_id: FileId,
+        source: Source,
+    ) {
         self.files.sources.insert(file_id, source);
     }
 
     /// Inserts an asset file (e.g. image, binary) into the world.
-    fn add_asset(&mut self, file_id: FileId, asset: Bytes) {
+    fn add_asset(
+        &mut self,
+        file_id: FileId,
+        asset: Bytes,
+    ) {
         self.files.assets.insert(file_id, asset);
     }
 
     /// Adds an imported file to the world (either source or asset).
-    pub fn add_file(&mut self, file: ImportedFile) {
+    pub fn add_file(
+        &mut self,
+        file: ImportedFile,
+    ) {
         match file {
             ImportedFile::Asset { file_id, bytes } => {
                 self.add_asset(file_id, bytes);
@@ -146,12 +174,18 @@ impl TideWorld {
     }
 
     /// Updates the `main` file ID to a new one.
-    pub fn change_main(&mut self, id: FileId) {
+    pub fn change_main(
+        &mut self,
+        id: FileId,
+    ) {
         self.main = id;
     }
 
     /// Removes both source and asset entries for a given file ID.
-    pub fn remove_file(&mut self, id: FileId) {
+    pub fn remove_file(
+        &mut self,
+        id: FileId,
+    ) {
         self.files.assets.remove(&id);
         self.files.sources.remove(&id);
     }
@@ -178,7 +212,10 @@ impl World for TideWorld {
     /// Returns an error if the file is not found.
     ///
     /// See [`World::source`].
-    fn source(&self, id: FileId) -> FileResult<Source> {
+    fn source(
+        &self,
+        id: FileId,
+    ) -> FileResult<Source> {
         if let Some(file) = self.files.sources.get(&id) {
             Ok(file.clone())
         } else {
@@ -191,7 +228,10 @@ impl World for TideWorld {
     /// Returns an error if the file is not found.
     ///
     /// See [`World::file`].
-    fn file(&self, id: FileId) -> FileResult<Bytes> {
+    fn file(
+        &self,
+        id: FileId,
+    ) -> FileResult<Bytes> {
         println!(
             "id: {:?}, found: {:?}",
             id,
@@ -209,19 +249,25 @@ impl World for TideWorld {
     /// Returns `None` if the index is out of bounds.
     ///
     /// See [`World::font`].
-    fn font(&self, index: usize) -> Option<Font> {
+    fn font(
+        &self,
+        index: usize,
+    ) -> Option<Font> {
         self.fonts.get(index).cloned()
     }
 
     /// Returns the current date/time. See [`World::today`].
-    fn today(&self, offset: Option<i64>) -> Option<Datetime> {
+    fn today(
+        &self,
+        offset: Option<i64>,
+    ) -> Option<Datetime> {
         let now = Utc::now();
         let with_offset = match offset {
             Some(hours) => {
                 let seconds = i32::try_from(hours).ok()?.checked_mul(3600)?;
                 now.with_timezone(&FixedOffset::east_opt(seconds)?)
-            },
-            None => now.with_timezone(&Local).fixed_offset()
+            }
+            None => now.with_timezone(&Local).fixed_offset(),
         };
 
         Datetime::from_ymd(
@@ -268,7 +314,10 @@ impl Clone for TideWorld {
 impl Debug for TideWorld {
     /// Provides a formatted debug representation of the world,
     /// including the main file and currently loaded sources/assets.
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         let main_source = self.source(self.main);
         let content = if let Ok(main) = &main_source {
             main.text()
@@ -307,10 +356,7 @@ pub mod tests {
     pub fn init_world() -> TideWorld {
         let main_file_id = FileId::new(None, VirtualPath::new("main"));
         let mut world = TideWorld::new(main_file_id, None);
-        let main = Source::new(
-            main_file_id,
-            String::from("= Hello World")
-        );
+        let main = Source::new(main_file_id, String::from("= Hello World"));
         world.add_source(main_file_id, main);
 
         world
@@ -347,7 +393,10 @@ pub mod tests {
 
         let new_file_id = FileId::new(None, VirtualPath::new("new_file.typ"));
         let asset_file_id = FileId::new(None, VirtualPath::new("fake_asset.svg"));
-        world.add_source(new_file_id, Source::new(new_file_id, String::from("*test*")));
+        world.add_source(
+            new_file_id,
+            Source::new(new_file_id, String::from("*test*")),
+        );
         assert!(world.source(new_file_id).is_ok());
         world.add_asset(asset_file_id, Bytes::from_string("fake SVG"));
         assert!(world.file(asset_file_id).is_ok());
@@ -364,7 +413,10 @@ pub mod tests {
         assert_eq!(world.main(), world.main);
 
         let new_file_id = FileId::new(None, VirtualPath::new("new_file.typ"));
-        world.add_source(new_file_id, Source::new(new_file_id, String::from("*test*")));
+        world.add_source(
+            new_file_id,
+            Source::new(new_file_id, String::from("*test*")),
+        );
         world.change_main(new_file_id);
         assert_eq!(world.main(), new_file_id);
     }
@@ -375,8 +427,14 @@ pub mod tests {
         assert!(world.source(world.main()).is_ok());
         assert_eq!(world.source(world.main()).unwrap().text(), "= Hello World"); //unwrap() is ok because of the test above
 
-        world.reload_source_from_content(world.main(), &Content::with_text("= Text modified"));
+        world.reload_source_from_content(
+            world.main(),
+            &Content::with_text("= Text modified"),
+        );
         assert!(world.source(world.main()).is_ok());
-        assert_eq!(world.source(world.main()).unwrap().text(), "= Text modified\n"); //unwrap() is ok because of the test above
+        assert_eq!(
+            world.source(world.main()).unwrap().text(),
+            "= Text modified\n"
+        ); //unwrap() is ok because of the test above
     }
 }

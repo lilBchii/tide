@@ -39,7 +39,10 @@ impl Buffer {
     }
 
     /// Replaces the current content of the buffer with the specified `content`.
-    pub fn fill(&mut self, content: Content) {
+    pub fn fill(
+        &mut self,
+        content: Content,
+    ) {
         self.content = content;
     }
 }

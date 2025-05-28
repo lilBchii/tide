@@ -140,7 +140,8 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         Some(path) => Text::new(format!("{:?}", path.clone())).shaping(Shaping::Advanced),
         None => Text::new("No main file...").shaping(Shaping::Advanced),
     };
-    let preview_button = text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
+    let preview_button =
+        text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
 
     let r = row![
         horizontal_space().width(TOOLBAR_SPACING),
@@ -215,7 +216,10 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
 /// Creates a styled button used inside drop-down menus.
 ///
 /// `label` is the text label of the menu button and `message` is the message to emit on press.
-fn menu_button(label: &str, message: Message) -> Button<Message> {
+fn menu_button(
+    label: &str,
+    message: Message,
+) -> Button<Message> {
     Button::new(Text::new(label).shaping(Shaping::Advanced))
         .on_press(message)
         .style(drop_down_menu_button)

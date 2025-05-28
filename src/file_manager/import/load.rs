@@ -1,9 +1,9 @@
 use crate::file_manager::file::get_relative_path;
 use std::ffi::OsStr;
+use std::fs;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read};
 use std::path::PathBuf;
-use std::fs;
 use typst::foundations::Bytes;
 use typst::syntax::{FileId, Source, VirtualPath};
 
@@ -14,14 +14,14 @@ pub enum ImportedFile {
         /// Unique file identifier, using a virtual path relative to the project root.
         file_id: FileId,
         /// Raw binary contents of the asset.
-        bytes: Bytes
+        bytes: Bytes,
     },
     /// Represents a `.typ` Typst source file.
     TypstSource {
         /// Unique file identifier, using a virtual path relative to the project root.
         file_id: FileId,
         /// The actual source code of the Typst file.
-        source: Source
+        source: Source,
     },
 }
 
@@ -44,7 +44,10 @@ pub fn load_files(paths: &Vec<PathBuf>) -> Result<Vec<ImportedFile>, Error>{
 /// # Errors
 ///
 /// Returns an [`Error`] if the file cannot be read, the extension is unknown, or the path is invalid.
-pub fn load_file(path: &PathBuf, root: &PathBuf) -> Result<ImportedFile, Error> {
+pub fn load_file(
+    path: &PathBuf,
+    root: &PathBuf,
+) -> Result<ImportedFile, Error> {
     if let Some(extension) = path.extension().and_then(OsStr::to_str) {
         match extension {
             "typ" => load_source_file(path, root),
@@ -55,7 +58,10 @@ pub fn load_file(path: &PathBuf, root: &PathBuf) -> Result<ImportedFile, Error> 
                 let bytes = Bytes::new(buff);
                 let id = FileId::new(
                     None,
-                    VirtualPath::new(get_relative_path(root, path).ok_or(Error::from(ErrorKind::NotFound))?),
+                    VirtualPath::new(
+                        get_relative_path(root, path)
+                            .ok_or(Error::from(ErrorKind::NotFound))?,
+                    ),
                 );
                 Ok(ImportedFile::Asset { file_id: id, bytes })
             }
@@ -70,11 +76,16 @@ pub fn load_file(path: &PathBuf, root: &PathBuf) -> Result<ImportedFile, Error> 
 /// # Errors
 ///
 /// Returns an [`Error`] if the file cannot be read or the virtual path could not be computed.
-fn load_source_file(path: &PathBuf, root: &PathBuf) -> Result<ImportedFile, Error> {
+fn load_source_file(
+    path: &PathBuf,
+    root: &PathBuf,
+) -> Result<ImportedFile, Error> {
     let content = fs::read_to_string(path)?;
     let id = FileId::new(
         None,
-        VirtualPath::new(get_relative_path(root, path).ok_or(Error::from(ErrorKind::NotFound))?),
+        VirtualPath::new(
+            get_relative_path(root, path).ok_or(Error::from(ErrorKind::NotFound))?,
+        ),
     );
     let source = Source::new(id, content);
     Ok(ImportedFile::TypstSource {
@@ -89,7 +100,10 @@ fn load_source_file(path: &PathBuf, root: &PathBuf) -> Result<ImportedFile, Erro
 /// # Errors
 ///
 /// Returns an [`Error`] if any directory or file access fails during the traversal or import process.
-pub fn load_repo(path: &PathBuf, root: &PathBuf) -> Result<Vec<ImportedFile>, Error> {
+pub fn load_repo(
+    path: &PathBuf,
+    root: &PathBuf,
+) -> Result<Vec<ImportedFile>, Error> {
     let files = recurse_compatible_files(path)?;
     let mut imported_files = vec![];
     for file in files {

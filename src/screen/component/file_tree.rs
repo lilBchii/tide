@@ -5,15 +5,16 @@ use iced::advanced::text::Shaping;
 use iced::{
     padding,
     widget::{
-        button, column, container, horizontal_space, mouse_area, row, svg, text::Wrapping,
-        vertical_rule, Text,
+        button, column, container, horizontal_space, mouse_area, row, svg,
+        text::Wrapping, vertical_rule, Text,
     },
     Alignment, Element, Length, Radians,
 };
 use std::f32::consts::FRAC_PI_2;
 
-pub static GENERIC_FILE: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("../../../assets/icons/file.svg")));
+pub static GENERIC_FILE: LazyLock<svg::Handle> = LazyLock::new(|| {
+    svg::Handle::from_memory(include_bytes!("../../../assets/icons/file.svg"))
+});
 pub static DIR_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!("../../../assets/icons/directory.svg"))
 });
@@ -23,15 +24,18 @@ pub static UNKNOWN_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
 pub static SVG_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!("../../../assets/icons/file_svg.svg"))
 });
-pub static IMAGE_ICON: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("../../../assets/icons/image.svg")));
-pub static BIB_ICON: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("../../../assets/icons/library.svg")));
+pub static IMAGE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
+    svg::Handle::from_memory(include_bytes!("../../../assets/icons/image.svg"))
+});
+pub static BIB_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
+    svg::Handle::from_memory(include_bytes!("../../../assets/icons/library.svg"))
+});
 pub static MARK_MAIN: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!("../../../assets/icons/mark_main.svg"))
 });
-pub static DELETE_ICON: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("../../../assets/icons/delete.svg")));
+pub static DELETE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
+    svg::Handle::from_memory(include_bytes!("../../../assets/icons/delete.svg"))
+});
 
 const HEIGHT: f32 = 20.0;
 const INDENT: f32 = 10.0;
@@ -91,7 +95,10 @@ impl FileTree {
     /// Adds a file to the file tree.
     ///
     /// The file is inserted into the internal list of files and sorted alphabetically.
-    pub fn add_file(&mut self, path: &PathBuf) {
+    pub fn add_file(
+        &mut self,
+        path: &PathBuf,
+    ) {
         let file = File::new(path);
         if let Some(mut files) = self.file_system.files.clone() {
             files.push(file);
@@ -108,14 +115,20 @@ impl FileTree {
     }
 
     /// Toggles open/closed state of a directory node.
-    pub fn fold(&mut self, path: &PathBuf) {
+    pub fn fold(
+        &mut self,
+        path: &PathBuf,
+    ) {
         self.file_system.update(path);
     }
 
     /// Changes the main Typst file path.
     ///
     /// If the path is already the main file, no change is made.
-    pub fn change_main(&mut self, path: &PathBuf) {
+    pub fn change_main(
+        &mut self,
+        path: &PathBuf,
+    ) {
         match self.main_path.clone() {
             Some(current_path) if current_path != *path => {
                 self.main_path = Some(path.clone());
@@ -128,7 +141,10 @@ impl FileTree {
     }
 
     /// Changes the currently selected file.
-    pub fn change_selected(&mut self, path: &PathBuf) {
+    pub fn change_selected(
+        &mut self,
+        path: &PathBuf,
+    ) {
         match self.selected_path.clone() {
             Some(current_path) if current_path != *path => {
                 self.selected_path = Some(path.clone());
@@ -141,7 +157,10 @@ impl FileTree {
     }
 
     /// Changes the last clicked file (used for file actions).
-    pub fn change_clicked(&mut self, path: Option<PathBuf>) {
+    pub fn change_clicked(
+        &mut self,
+        path: Option<PathBuf>,
+    ) {
         match path {
             None => self.clicked_path = None,
             Some(path) => match self.clicked_path.clone() {
@@ -190,7 +209,10 @@ impl Dir {
     /// Updates the expansion state of the directory at the specified path.
     ///
     /// If the path matches this node, toggles its open state and loads children.
-    fn update(&mut self, path: &PathBuf) {
+    fn update(
+        &mut self,
+        path: &PathBuf,
+    ) {
         if &*self.path == path {
             self.is_open ^= true;
 
@@ -235,24 +257,21 @@ impl Dir {
         let mut height = HEIGHT;
 
         if self.is_open {
-            let ch = column(
-                self.dirs
-                    .as_ref()
-                    .unwrap()
-                    .iter()
-                    .map(|e| e.view(clicked_path, main_path, selected_path))
-                    .chain(
-                        self.files
-                            .as_ref()
-                            .unwrap()
-                            .iter()
-                            .map(|f| File::view(f, clicked_path, main_path, selected_path)),
-                    )
-                    .map(|(e, _h)| {
-                        height += HEIGHT;
-                        e
-                    }),
-            );
+            let ch =
+                column(
+                    self.dirs
+                        .as_ref()
+                        .unwrap()
+                        .iter()
+                        .map(|e| e.view(clicked_path, main_path, selected_path))
+                        .chain(self.files.as_ref().unwrap().iter().map(|f| {
+                            File::view(f, clicked_path, main_path, selected_path)
+                        }))
+                        .map(|(e, _h)| {
+                            height += HEIGHT;
+                            e
+                        }),
+                );
 
             col = col.push(row![
                 horizontal_space().width(INDENT),
@@ -417,8 +436,12 @@ impl File {
                         (
                             container(
                                 mouse_area(row)
-                                    .on_press(Message::ChangeCurrentFile(self.path.clone()))
-                                    .on_right_press(Message::FileClick(self.path.clone())),
+                                    .on_press(Message::ChangeCurrentFile(
+                                        self.path.clone(),
+                                    ))
+                                    .on_right_press(Message::FileClick(
+                                        self.path.clone(),
+                                    )),
                             )
                             .style(selected_file)
                             .into(),
@@ -428,8 +451,12 @@ impl File {
                         (
                             container(
                                 mouse_area(row)
-                                    .on_press(Message::ChangeCurrentFile(self.path.clone()))
-                                    .on_right_press(Message::FileClick(self.path.clone())),
+                                    .on_press(Message::ChangeCurrentFile(
+                                        self.path.clone(),
+                                    ))
+                                    .on_right_press(Message::FileClick(
+                                        self.path.clone(),
+                                    )),
                             )
                             .into(),
                             HEIGHT,

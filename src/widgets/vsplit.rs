@@ -63,7 +63,10 @@ pub struct VSplit<'a, Message> {
 }
 
 impl<Message> Debug for VSplit<'_, Message> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         f.debug_struct("VSplit")
             .field("split_at", &self.split_at)
             .field("strategy", &self.strategy)
@@ -95,32 +98,47 @@ where
     /// Sets the position of the split:
     /// - If `strategy` is `Relative`, `split_at` should be in `[0.0, 1.0]`
     /// - If `Left` or `Right`, it's interpreted in absolute pixels
-    pub fn split_at(mut self, split_at: f32) -> Self {
+    pub fn split_at(
+        mut self,
+        split_at: f32,
+    ) -> Self {
         self.split_at = split_at;
         self
     }
 
     /// Defines the layout strategy (see [`Strategy`]).
-    pub fn strategy(mut self, strategy: Strategy) -> Self {
+    pub fn strategy(
+        mut self,
+        strategy: Strategy,
+    ) -> Self {
         self.strategy = strategy;
         self
     }
 
     /// Sets the thickness of the split rule, in pixels.
-    pub fn rule_width(mut self, rule_width: impl Into<Pixels>) -> Self {
+    pub fn rule_width(
+        mut self,
+        rule_width: impl Into<Pixels>,
+    ) -> Self {
         self.rule_width = rule_width.into().0;
         self.children[1] = Rule::vertical(self.rule_width).into();
         self
     }
 
     /// Registers a callback message when the split position is updated via drag.
-    pub fn on_resize(mut self, on_resize: fn(f32) -> Message) -> Self {
+    pub fn on_resize(
+        mut self,
+        on_resize: fn(f32) -> Message,
+    ) -> Self {
         self.on_resize = Some(on_resize);
         self
     }
 
     /// Allows customizing the rule’s style using a closure with access to the theme.
-    pub fn style(mut self, style: impl Fn(&Theme) -> rule::Style + 'a) -> Self {
+    pub fn style(
+        mut self,
+        style: impl Fn(&Theme) -> rule::Style + 'a,
+    ) -> Self {
         self.children[1] = Rule::vertical(self.rule_width).style(style).into();
         self
     }
@@ -134,7 +152,12 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
         Size::new(Length::Fill, Length::Fill)
     }
 
-    fn layout(&self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
+    fn layout(
+        &self,
+        tree: &mut Tree,
+        renderer: &Renderer,
+        limits: &Limits,
+    ) -> Node {
         let max_limits = limits.max();
 
         let left_width = match self.strategy {
@@ -160,9 +183,11 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
         );
 
         let children = vec![
-            self.children[0]
-                .as_widget()
-                .layout(&mut tree.children[0], renderer, &left_limits),
+            self.children[0].as_widget().layout(
+                &mut tree.children[0],
+                renderer,
+                &left_limits,
+            ),
             self.children[1]
                 .as_widget()
                 .layout(&mut tree.children[1], renderer, limits)
@@ -210,7 +235,10 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
         self.children.iter().map(Tree::new).collect()
     }
 
-    fn diff(&self, tree: &mut Tree) {
+    fn diff(
+        &self,
+        tree: &mut Tree,
+    ) {
         tree.diff_children(&self.children);
     }
 
@@ -264,12 +292,14 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
                 } => {
                     if state.dragging {
                         if let Some(on_resize) = self.on_resize {
-                            let relative_pos =
-                                (x - bounds.x - self.rule_width / 2.0).clamp(0.0, bounds.width);
+                            let relative_pos = (x - bounds.x - self.rule_width / 2.0)
+                                .clamp(0.0, bounds.width);
                             let split_at = match self.strategy {
                                 Strategy::Relative => relative_pos / bounds.width,
                                 Strategy::Left => relative_pos,
-                                Strategy::Right => bounds.width - relative_pos - self.rule_width,
+                                Strategy::Right => {
+                                    bounds.width - relative_pos - self.rule_width
+                                }
                             };
                             shell.publish(on_resize(split_at));
                             event_status = Status::Captured;

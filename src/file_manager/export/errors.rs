@@ -26,10 +26,17 @@ pub enum ExportError {
 }
 
 impl Display for ExportError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         match self {
-            ExportError::CompilationError(msg) => write!(f, "Can't compile document: {}", msg),
-            ExportError::PdfGenerationError(msg) => write!(f, "Can't generate PDF: {}", msg),
+            ExportError::CompilationError(msg) => {
+                write!(f, "Can't compile document: {}", msg)
+            }
+            ExportError::PdfGenerationError(msg) => {
+                write!(f, "Can't generate PDF: {}", msg)
+            }
             ExportError::FileWriteError(err) => write!(f, "Can't write file: {}", err),
             ExportError::FileReadError(err) => write!(f, "Can't read file: {}", err),
         }
@@ -48,10 +55,18 @@ impl Error for ExportError {
 impl Clone for ExportError {
     fn clone(&self) -> Self {
         match self {
-            ExportError::CompilationError(msg) => ExportError::CompilationError(msg.clone()),
-            ExportError::PdfGenerationError(msg) => ExportError::PdfGenerationError(msg.clone()),
-            ExportError::FileWriteError(err) => ExportError::FileWriteError(io::Error::new(err.kind(), err.to_string())),
-            ExportError::FileReadError(err) => ExportError::FileReadError(io::Error::new(err.kind(), err.to_string())),
+            ExportError::CompilationError(msg) => {
+                ExportError::CompilationError(msg.clone())
+            }
+            ExportError::PdfGenerationError(msg) => {
+                ExportError::PdfGenerationError(msg.clone())
+            }
+            ExportError::FileWriteError(err) => {
+                ExportError::FileWriteError(io::Error::new(err.kind(), err.to_string()))
+            }
+            ExportError::FileReadError(err) => {
+                ExportError::FileReadError(io::Error::new(err.kind(), err.to_string()))
+            }
         }
     }
 }

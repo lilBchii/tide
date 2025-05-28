@@ -80,7 +80,10 @@ impl Tide {
     ///
     /// This includes message handling for both the editor and the welcome screen.
     /// Transitions from welcome to editor mode based on user interaction.
-    fn update(&mut self, message: Message) -> Task<Message> {
+    fn update(
+        &mut self,
+        message: Message,
+    ) -> Task<Message> {
         match message {
             Message::Editor(message) => {
                 let Screen::Editing(editing) = &mut self.screen else {
@@ -96,32 +99,44 @@ impl Tide {
                 match message {
                     welcome::Message::ToolBar(message) => match message {
                         toolbar::Message::DropDownMenu => Task::none(),
-                        toolbar::Message::OpenProject(path_option, main) => match path_option {
-                            Some(import_path) => {
-                                self.screen = Screen::Editing(Editing::new(
-                                    self.config.editor.clone(),
-                                    import_path.to_path_buf(),
-                                ));
-                                Task::done(Message::Editor(editing::Message::ToolBar(
-                                    toolbar::Message::OpenProject(Some(import_path), main),
-                                )))
-                            }
-                            None => {
-                                let dialog_path = load_repo_dialog();
-                                match dialog_path {
-                                    Some(import_path) => {
-                                        self.screen = Screen::Editing(Editing::new(
-                                            self.config.editor.clone(),
-                                            import_path.to_path_buf(),
-                                        ));
-                                        Task::done(Message::Editor(editing::Message::ToolBar(
-                                            toolbar::Message::OpenProject(Some(import_path), main),
-                                        )))
+                        toolbar::Message::OpenProject(path_option, main) => {
+                            match path_option {
+                                Some(import_path) => {
+                                    self.screen = Screen::Editing(Editing::new(
+                                        self.config.editor.clone(),
+                                        import_path.to_path_buf(),
+                                    ));
+                                    Task::done(Message::Editor(
+                                        editing::Message::ToolBar(
+                                            toolbar::Message::OpenProject(
+                                                Some(import_path),
+                                                main,
+                                            ),
+                                        ),
+                                    ))
+                                }
+                                None => {
+                                    let dialog_path = load_repo_dialog();
+                                    match dialog_path {
+                                        Some(import_path) => {
+                                            self.screen = Screen::Editing(Editing::new(
+                                                self.config.editor.clone(),
+                                                import_path.to_path_buf(),
+                                            ));
+                                            Task::done(Message::Editor(
+                                                editing::Message::ToolBar(
+                                                    toolbar::Message::OpenProject(
+                                                        Some(import_path),
+                                                        main,
+                                                    ),
+                                                ),
+                                            ))
+                                        }
+                                        None => Task::none(),
                                     }
-                                    None => Task::none(),
                                 }
                             }
-                        },
+                        }
                         _ => welcome
                             .update(welcome::Message::ToolBar(message))
                             .map(Message::Welcome),

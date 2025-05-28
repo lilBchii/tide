@@ -7,7 +7,10 @@ use iced::{
 /// Returns a success-themed style for a "validate" button based on the current theme and widget status.
 ///
 /// The style changes color and border appearance depending on the [`Status`].
-pub fn validate_button(theme: &Theme, status: Status) -> Style {
+pub fn validate_button(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: Some(palette.success.weak.color.into()),
@@ -40,7 +43,10 @@ pub fn validate_button(theme: &Theme, status: Status) -> Style {
 /// Returns a danger-themed style for a "cancel" button using the theme's danger palette.
 ///
 /// Adjusts colors dynamically based on the button's [`Status`].
-pub fn cancel_button(theme: &Theme, status: Status) -> Style {
+pub fn cancel_button(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: Some(palette.danger.base.color.into()),
@@ -70,7 +76,10 @@ pub fn cancel_button(theme: &Theme, status: Status) -> Style {
 /// Returns a primary-colored style used for toolbar buttons.
 ///
 /// Uses colors from the theme's primary palette and visually reacts to hover, press, and disabled states.
-pub fn toolbar_button(theme: &Theme, status: Status) -> Style {
+pub fn toolbar_button(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: Some(palette.primary.weak.color.into()),
@@ -103,7 +112,10 @@ pub fn toolbar_button(theme: &Theme, status: Status) -> Style {
 /// Returns a minimalistic style for dropdown menu buttons with contextual highlighting on interaction.
 ///
 /// The style is typically borderless until hovered or pressed, at which point it gains color and border.
-pub fn drop_down_menu_button(theme: &Theme, status: Status) -> Style {
+pub fn drop_down_menu_button(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: None,
@@ -140,7 +152,10 @@ pub fn drop_down_menu_button(theme: &Theme, status: Status) -> Style {
 /// Returns a clean, borderless style for buttons used in file-related UI elements.
 ///
 /// On press, the button adopts a primary highlight color.
-pub fn files_button(theme: &Theme, status: Status) -> Style {
+pub fn files_button(
+    theme: &Theme,
+    status: Status,
+) -> Style {
     let palette = theme.extended_palette();
     let active = Style {
         background: None,

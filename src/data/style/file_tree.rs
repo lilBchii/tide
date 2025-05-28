@@ -1,6 +1,9 @@
 use iced::{
     border::rounded,
-    widget::{container::Style as ContainerStyle, svg::Style as SvgStyle, text::Style as TxtStyle},
+    widget::{
+        container::Style as ContainerStyle, svg::Style as SvgStyle,
+        text::Style as TxtStyle,
+    },
     Theme,
 };
 
@@ -13,7 +16,10 @@ pub fn main_style(theme: &Theme) -> TxtStyle {
 }
 
 /// Returns the color styling for SVG icons.
-pub fn svg_icon(theme: &Theme, _status: iced::widget::svg::Status) -> SvgStyle {
+pub fn svg_icon(
+    theme: &Theme,
+    _status: iced::widget::svg::Status,
+) -> SvgStyle {
     let palette = theme.extended_palette();
     SvgStyle {
         color: Some(palette.primary.weak.color),

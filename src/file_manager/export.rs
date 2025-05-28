@@ -1,12 +1,12 @@
+use crate::file_manager::export::errors::ExportError;
+use crate::world::TideWorld;
 use typst::compile;
 use typst::diag::Warned;
 use typst::layout::PagedDocument;
-use crate::file_manager::export::errors::ExportError;
-use crate::world::TideWorld;
 
+pub mod errors;
 pub mod pdf;
 pub mod svg;
-pub mod errors;
 pub mod template;
 
 #[derive(Debug, Clone)]
@@ -28,8 +28,10 @@ fn compile_document(world: &TideWorld) -> Result<PagedDocument, ExportError> {
     if !warnings.is_empty() {
         eprintln!("Typst warnings: {:?}", warnings);
     }
-    output.map_err(|e| ExportError::CompilationError(
-        format!("{:?}", e.iter()
-            .map(|s| s.message.clone())
-            .collect::<Vec<_>>())))
+    output.map_err(|e| {
+        ExportError::CompilationError(format!(
+            "{:?}",
+            e.iter().map(|s| s.message.clone()).collect::<Vec<_>>()
+        ))
+    })
 }

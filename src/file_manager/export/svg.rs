@@ -1,10 +1,10 @@
+use crate::file_manager::export::compile_document;
+use crate::file_manager::export::errors::ExportError;
+use crate::world::TideWorld;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use typst::layout::PagedDocument;
 use typst_svg::svg;
-use crate::file_manager::export::compile_document;
-use crate::file_manager::export::errors::ExportError;
-use crate::world::TideWorld;
 
 /// Exports each page of the compiled Typst document as an individual SVG file.
 ///
@@ -13,7 +13,10 @@ use crate::world::TideWorld;
 /// # Errors
 ///
 /// Returns a [`ExportError`] if compilation or writing fails.
-pub async fn export_svg(world: TideWorld, output_path: PathBuf) -> Result<PathBuf, ExportError> {
+pub async fn export_svg(
+    world: TideWorld,
+    output_path: PathBuf,
+) -> Result<PathBuf, ExportError> {
     let document = compile_document(&world)?;
     let svg_content = generate_svg(&document);
     let output_base_name = output_path.file_name().unwrap_or(OsStr::new("output"));
@@ -34,9 +37,13 @@ fn generate_svg(document: &PagedDocument) -> Vec<String> {
 /// # Errors
 ///
 /// Returns a [`ExportError::FileWriteError`] on write failure.
-fn write_svg(output_base_name: &str, content: Vec<String>) -> Result<(), ExportError> {
+fn write_svg(
+    output_base_name: &str,
+    content: Vec<String>,
+) -> Result<(), ExportError> {
     for (i, page) in content.iter().enumerate() {
-        let output_path = output_base_name.to_owned() + "-" + i.to_string().as_str() + ".svg";
+        let output_path =
+            output_base_name.to_owned() + "-" + i.to_string().as_str() + ".svg";
         std::fs::write(output_path, page).map_err(|e| ExportError::FileWriteError(e))?
     }
     Ok(())

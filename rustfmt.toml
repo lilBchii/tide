@@ -1,0 +1,42 @@
+# commented lines are non default configuration for unstable features.
+# to be uncommented when stabilised
+
+edition = "2021"
+
+tab_spaces = 4
+hard_tabs = false
+
+newline_style = "Auto"
+
+max_width = 90
+attr_fn_like_width = 70
+chain_width = 60
+short_array_element_width_threshold = 15
+single_line_let_else_max_width = 0
+struct_lit_width = 18
+struct_variant_width = 35
+
+# combine_control_expr = false
+disable_all_formatting = false
+# format_code_in_doc_comments = true
+# enum_discrim_align_threshold = 20
+fn_params_layout = "Vertical"
+fn_call_width = 60
+force_explicit_abi = true
+match_arm_leading_pipes = "Never"
+match_block_trailing_comma = false
+merge_derives = true
+# reorder_impl_items = true
+remove_nested_parens = true
+use_field_init_shorthand = true
+
+# normalize_comments = true
+# wrap_comments = true
+# normalize_doc_attributes = true
+
+# imports_layout = "HorizontalVertical"
+reorder_imports = true
+# group_imports = "StdExternalCrate"
+reorder_modules = true
+# imports_granularity = "Module"
+
