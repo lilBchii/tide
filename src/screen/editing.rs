@@ -85,7 +85,7 @@ pub struct Editing {
     file_modal: FileModal,
     /// Modal window for creating a new project.
     project_modal: ProjectModal,
-    /// Precompiled Typst docucument
+    /// Precompiled Typst document
     document: Option<PagedDocument>,
 }
 
@@ -188,7 +188,7 @@ impl Editing {
     /// Attempts to create a new empty file at the specified path and uploads it into the project.
     fn create_file(&mut self, path: PathBuf) {
         if let Err(e) = fs::File::create(&path) {
-            eprintln!("Error when creating the file : {}", e);
+            eprintln!("Error when creating the file: {}", e);
         }
         println!("new file created:\n{:?}", path);
         if let Err(e) = self.upload_file(&path.clone()) {
@@ -807,7 +807,7 @@ impl Editing {
                     Task::done(Message::ReloadPreview)
                 }
                 Err(e) => {
-                    println!("compile error : {}", e);
+                    println!("compilation error: {}", e);
                     Task::none()
                 }
             },
@@ -872,7 +872,7 @@ impl AutocompletionContext {
     }
 }
 
-//...because Completion need to implement Display, Eq, Hash (for SelectionList)
+//...because Completion needs to implement Display, Eq, Hash (for SelectionList)
 /// A wrapper around [`Completion`] that implements display and hashing,
 /// making it usable in a selection list.
 #[derive(Clone, Debug)]

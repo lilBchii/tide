@@ -29,12 +29,10 @@ impl PagePreview {
     }
 
     fn fetch(page: &Page, zoom: f32) -> Self {
+        let encode_result = render(page, 2.0 * zoom).encode_png(); //should take into account the window scale factor (see appearance.rs)
+
         Self {
-            bytes: Some(Bytes::from_owner(
-                render(page, 2.0 * zoom)
-                    .encode_png()
-                    .expect("png encodable document"),
-            )),
+            bytes: encode_result.ok().map(Bytes::from_owner),
             height: page.frame.height().to_pt() as f32,
             width: page.frame.width().to_pt() as f32,
         }
@@ -93,23 +91,23 @@ impl Preview {
             zoom: 1.0,
             offset: AbsoluteOffset::default(),
             viewport_h: DEFAULT_VIEWPORT_H,
-            pages_to_render: (0, 1),
+            pages_to_render: (0, 0),
             pages: None,
         }
     }
 
     // makes a vec of (begin, end)
-    // with `begin` the absolute position of the begining of the page
-    // and `end` the absolute position of the end of page
+    // with `begin` the absolute position at the beginning of the page
+    // and `end` the absolute position at the end of the page
     fn pages_positions(&self, document: &PagedDocument) -> Vec<(f32, f32)> {
         document
             .pages
             .iter()
-            .scan(0.0, |state, page| {
-                *state += SPACING_BETWEEN_PAGES as f32;
-                let begin = *state;
-                *state += page.frame.height().to_pt() as f32 * self.zoom;
-                let end = *state;
+            .scan(0.0_f32, |offset, page| {
+                *offset += SPACING_BETWEEN_PAGES as f32;
+                let begin = *offset;
+                *offset += page.frame.height().to_pt() as f32 * self.zoom;
+                let end = *offset;
                 Some((begin, end))
             })
             .collect()
@@ -197,7 +195,7 @@ impl Preview {
             }
             Message::ReloadPages => {
                 let new_index = self.compute_pages_to_render(document);
-                println!("{:?}", new_index);
+                println!("index: {:?}", new_index);
                 if new_index != self.pages_to_render {
                     self.pages_to_render = new_index;
                     println!("perform reload");
