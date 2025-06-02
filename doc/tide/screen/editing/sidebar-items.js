@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Message"],"fn":["init_world"],"struct":["AutocompletionContext","Current","DisplayableCompletion","Editing"]};

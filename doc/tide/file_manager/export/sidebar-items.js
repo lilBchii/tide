@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ExportType"],"fn":["compile_document"],"mod":["errors","pdf","svg","template"]};

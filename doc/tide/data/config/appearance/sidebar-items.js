@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_AUTO_PAIRS","DEFAULT_FONT","DEFAULT_FONT_PATH"],"fn":["default_pairs"],"struct":["ColorsConfig","Config","EditorConfig","GeneralConfig"]};

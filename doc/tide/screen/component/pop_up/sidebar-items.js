@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Message","PopUpType"],"fn":["button_row"],"struct":["PopUpElement"]};

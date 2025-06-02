@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["modal_style","modal_text_style"]};

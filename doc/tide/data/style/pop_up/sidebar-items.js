@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["confirm","darker_bg","error","title_text","warning"]};

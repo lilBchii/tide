@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["ALL_TYPES","TEMPLATE"],"enum":["UploadType"],"mod":["load"]};

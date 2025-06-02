@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["autocomplete","complete_word","log_completions"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Message"],"fn":["main"],"mod":["data","editor","file_manager","screen","widgets","world"],"struct":["Tide"]};

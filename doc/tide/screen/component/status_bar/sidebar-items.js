@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["SPACING"],"fn":["status_bar_view"]};

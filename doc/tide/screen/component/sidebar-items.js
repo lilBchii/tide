@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["debug","file_tree","modal","pop_up","preview","status_bar","toolbar"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["FILE_BUTTON_HEIGHT","WELCOME_BUTTON_HEIGHT","WELCOME_BUTTON_PADDING","WELCOME_BUTTON_WIDTH"],"enum":["Message"],"fn":["file_button","welcome_button"],"static":["LOGO"],"struct":["Welcome"]};

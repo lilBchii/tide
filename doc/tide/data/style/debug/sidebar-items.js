@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["debug_container_style"]};

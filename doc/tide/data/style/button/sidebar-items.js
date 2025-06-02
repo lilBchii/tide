@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["cancel_button","drop_down_menu_button","files_button","toolbar_button","validate_button"]};

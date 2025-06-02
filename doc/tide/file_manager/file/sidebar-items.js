@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_CACHED_PROJECTS"],"fn":["cache_project","delete_file_from_disk","get_config_path","get_fonts_path","get_recent_paths","get_relative_path","get_templates_path","load_file_dialog","load_repo_dialog","retrieve_env_path","save_file_dialog","save_file_disk"],"struct":["ProjectCache"]};
