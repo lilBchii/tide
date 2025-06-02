@@ -1,13 +1,34 @@
 # Tide (Typst IDE)
 <div align="center">
-    <img width="360" height="360" src="https://github.com/user-attachments/assets/6a588b71-dd71-4e7f-8f19-43cea29818eb">
+    <img width="120" height="120" src="https://github.com/user-attachments/assets/6a588b71-dd71-4e7f-8f19-43cea29818eb">
     <sub><sup><p>Official Tide logo, designed by <a href="https://github.com/mey-vltn">@Mey</a>.</p></sup></sub>
 </div>
 
-Tide is a lightweight, cross-platform IDE for Typst, written in Rust with [Iced](https://github.com/iced-rs/iced). It offers a user-friendly graphical interface for editing, compiling, and exporting Typst documents.
+Tide is a lightweight, cross-platform IDE for Typst, written in Rust with
+[Iced](https://github.com/iced-rs/iced). It offers a user-friendly graphical
+interface for editing, compiling, and exporting Typst documents.
+
+Tide focuses on local editing, it aims to enhance writing documents such as
+course notes, curriculum vitae, letters, ... It is not meant for collaborative work
+but will make working with your personal templates way easier with an offline setup.
 
 Tide is available for Windows, Linux, and macOS.
 
+This is work in progress. There are lot of features we would like to
+add and issues to fix. Please refer to <a href='#Contributing'>How to Contribute</a>
+if you have any great idea.
+## Table of contents
+
+<a href='#Features'>Features</a><br>
+<a href='#Installation'>Installation</a><br>
+<a href='#SysEnv'>System Environment</a><br>
+<a href='#Configuration'>Configuration</a><br>
+<a href='#UsageOverview'>Usage Overview</a><br>
+<a href='#Contributing'>How to Contribute</a><br>
+<a href='#License'>License</a><br>
+<a href='#Creators'>Creators</a><br>
+
+<a id='Features'></a>
 ## Features
 - Project and file management (create, import, delete)
 - Typst preview and compilation
@@ -16,11 +37,15 @@ Tide is available for Windows, Linux, and macOS.
 - Customizable appearance and editor behavior via `config.toml`
 - Keyboard shortcuts and GUI actions for efficiency
 
+<a id='Installation'></a>
 ## Installation
 ### From Built Executable
-Executables for each platform are available on the [Releases page](https://github.com/lilBchii/tide/releases). Download the appropriate binary for your operating system and run it.
+Executables for each platform are available on the
+[Releases page](https://github.com/lilBchii/tide/releases). Download the appropriate
+binary for your operating system and run it.
 
-At first launch, Tide creates a system environment directory where user settings, templates, projects cache and fonts are managed.
+At first launch, Tide creates a system environment directory where user settings,
+templates, projects cache and fonts are managed.
 ### From Source
 To build Tide from source, ensure you have Rust installed:
 ```bash
@@ -38,6 +63,7 @@ cargo build --release
 ```
 The resulting executable will be found in `target/release/`.
 
+<a id='SysEnv'></a>
 ## System Environment
 Upon first use, a configuration directory is created:
 | Platform | Path                                     |
@@ -55,6 +81,7 @@ This directory contains:
 > [!WARNING]
 > Avoid deleting or moving this directory manually.
 
+<a id='Configuration'></a>
 ## Configuration
 The `config.toml` file allows customization of:
 - Colors (`background`, `text`, `primary`, `success`, `danger`)
@@ -88,6 +115,7 @@ font-size = 25
 "`" = "`"
 ```
 
+<a id='UsageOverview'></a>
 ## Usage Overview
 ### Home Screen
 - Create a new project (blank or from template)
@@ -129,8 +157,19 @@ font-size = 25
 - `Ctrl + E`: Export current project as a PDF
 - `Ctrl + Space`: Open the autocomplete context
 
+<a id='Contributing'></a>
+## How to Contribute
+We would love to benefit everyone's experience and interest so feel free to
+contribute. See [CONTRIBUTING](https://github.com/lilBchii/tide/blob/main/CONTRIBUTING.md)
+for a guide on how to contribute.
+
+<a id='License'></a>
 ## License
 ...
 
+<a id='Creators'></a>
 ## Creators
-Tide was originally a student project created and still maintained by [@lilBchii](https://github.com/lilBchii), [@pacotine](https://github.com/pacotine), [@Mey](https://github.com/mey-vltn), [@Steorr4](https://github.com/Steorr4).
+Tide is a student project started by [@lilBchii](https://github.com/lilBchii),
+[@pacotine](https://github.com/pacotine), [@Mey](https://github.com/mey-vltn) and
+[@Steorr4](https://github.com/Steorr4) at the Université Paris Cité. It's still
+maintained by them.
