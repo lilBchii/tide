@@ -7,8 +7,6 @@ use super::component::{
     toolbar::{self, editing_toolbar, open_url},
 };
 
-use crate::file_manager::export::errors::ExportError;
-use crate::file_manager::export::pdf::export_pdf;
 use crate::file_manager::export::svg::{export_svg, preview_svg};
 use crate::file_manager::export::template::export_template;
 use crate::file_manager::export::ExportType;
@@ -25,6 +23,10 @@ use crate::world::TideWorld;
 use crate::{
     data::config::appearance::EditorConfig, file_manager::file::load_repo_dialog,
 };
+use crate::{
+    data::config::appearance::HighlighterTheme, file_manager::export::pdf::export_pdf,
+};
+use crate::{editor, file_manager::export::errors::ExportError};
 use crate::{
     editor::autocomplete::autocomplete, file_manager::file::delete_file_from_disk,
 };
@@ -89,6 +91,7 @@ pub struct Editing {
     file_modal: FileModal,
     /// Modal window for creating a new project.
     project_modal: ProjectModal,
+    theme: HighlighterTheme,
 }
 
 impl Editing {
@@ -99,6 +102,7 @@ impl Editing {
         config: EditorConfig,
         current_dir: PathBuf,
     ) -> Self {
+        println!("{:?}", config.colors);
         Self {
             current: Current::empty(),
             buffers: HashMap::new(),
@@ -113,6 +117,7 @@ impl Editing {
             debug: None,
             file_modal: FileModal::new(current_dir.to_path_buf()),
             project_modal: ProjectModal::new(),
+            theme: config.colors,
         }
     }
 
@@ -264,7 +269,14 @@ impl Editing {
                 }
             })
             .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
-            .height(Fill);
+            .height(Fill)
+            .highlight_with::<editor::highlighter::Highlighter>(
+                editor::highlighter::Settings {
+                    theme: self.theme.clone(),
+                    extension: "typ".to_string(),
+                },
+                |highlight, _theme| highlight.to_format(),
+            );
 
         let cursor_pos = self.current.buffer.content.cursor_position();
 

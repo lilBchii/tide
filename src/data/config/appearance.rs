@@ -48,6 +48,7 @@ pub struct EditorConfig {
     /// Automatically inserted character pairs (e.g. `(` -> `)`).
     #[serde(default = "default_pairs")]
     pub auto_pairs: HashMap<char, char>,
+    pub colors: HighlighterTheme,
 }
 
 /// Configuration for UI theme colors.
@@ -69,6 +70,46 @@ pub struct ColorsConfig {
     /// Color used to indicate error or danger states.
     #[serde(with = "color_serde")]
     pub danger: Color,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+pub struct HighlighterTheme {
+    #[serde(with = "color_serde")]
+    pub function: Color,
+    #[serde(with = "color_serde")]
+    pub number: Color,
+    #[serde(with = "color_serde")]
+    pub comment: Color,
+    #[serde(with = "color_serde")]
+    pub string: Color,
+    #[serde(with = "color_serde")]
+    pub keyword: Color,
+}
+
+// impl HighlighterTheme {
+//     // maybe remove
+//     pub fn from_main_theme(main_theme: Theme) -> Self {
+//         let palette = main_theme.extended_palette();
+//         Self {
+//             function: palette.primary.base.color,
+//             number: palette.secondary.base.color,
+//             comment: palette.background.weak.color,
+//             string: palette.success.base.color,
+//             keyword: palette.danger.base.color,
+//         }
+//     }
+// }
+
+impl Default for HighlighterTheme {
+    fn default() -> Self {
+        Self {
+            function: Color::from_rgb(0.137, 0.612, 0.678),
+            number: Color::from_rgb(200.0 / 255.0, 85.0 / 255.0, 85.0 / 255.0),
+            comment: Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0),
+            string: Color::from_rgb(50.0 / 255.0, 158.0 / 255.0, 117.0 / 255.0),
+            keyword: Color::from_rgb(200.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
+        }
+    }
 }
 
 impl Config {
@@ -118,7 +159,7 @@ impl Config {
             .map(Cow::Owned) //allocate the Vec<u8>
             .unwrap_or_else(|err| {
                 eprintln!("Can't load font: {err}");
-                return Cow::Borrowed(DEFAULT_FONT); //send the reference
+                Cow::Borrowed(DEFAULT_FONT) //send the reference
             })
     }
 }
@@ -140,6 +181,7 @@ impl Default for EditorConfig {
         Self {
             font_size: 14,
             auto_pairs: HashMap::from(DEFAULT_AUTO_PAIRS),
+            colors: HighlighterTheme::default(),
         }
     }
 }
