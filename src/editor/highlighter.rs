@@ -1,9 +1,8 @@
 use std::ops::Range;
 
-use iced::{Color, Font, Theme as IcedTheme};
-use iced_core::text::highlighter::{self, Format};
-
 use crate::data::config::appearance::HighlighterTheme;
+use iced::{Color, Font};
+use iced_core::text::highlighter::{self, Format};
 
 pub struct Highlighter {
     settings: Settings,
@@ -34,6 +33,7 @@ impl highlighter::Highlighter for Highlighter {
         &mut self,
         line: usize,
     ) {
+        println!("highlighter::change_line");
         self.current_line = line;
     }
 
@@ -41,6 +41,7 @@ impl highlighter::Highlighter for Highlighter {
         &mut self,
         line: &str,
     ) -> Self::Iterator<'_> {
+        println!("highlighter::highlight_line {}", line);
         self.current_line += 1;
         let mut vec = vec![];
         let root = typst::syntax::parse(line);
@@ -70,21 +71,73 @@ fn highlight_tree(
             typst::syntax::Tag::String => Highlight::with_color(theme.string),
             typst::syntax::Tag::Number => Highlight::with_color(theme.number),
             typst::syntax::Tag::Emph => Highlight::with_font(Font {
-                family: iced::font::Family::Monospace,
+                family: Default::default(),
                 weight: iced::font::Weight::Normal,
                 stretch: iced::font::Stretch::Normal,
                 style: iced::font::Style::Italic,
             }),
             typst::syntax::Tag::Strong | typst::syntax::Tag::Heading => {
                 Highlight::with_font(Font {
-                    family: iced::font::Family::Monospace,
+                    family: Default::default(),
                     weight: iced::font::Weight::Bold,
                     stretch: iced::font::Stretch::Normal,
                     style: iced::font::Style::Normal,
                 })
             }
             typst::syntax::Tag::Keyword => Highlight::with_color(theme.keyword),
-            _ => Highlight::none(),
+            typst::syntax::Tag::MathDelimiter => Highlight::with_color(theme.math_delimiter),
+            typst::syntax::Tag::Ref => Highlight::from(Highlight {
+                color: Some(theme.reference),
+                font: Some(Font {
+                    family: Default::default(),
+                    weight: iced::font::Weight::Semibold,
+                    stretch: iced::font::Stretch::Normal,
+                    style: iced::font::Style::Normal,
+                }),
+            }),
+            typst::syntax::Tag::Label => Highlight::from(Highlight {
+                color: Some(theme.label),
+                font: Some(Font {
+                    family: Default::default(),
+                    weight: iced::font::Weight::Semibold,
+                    stretch: iced::font::Stretch::Normal,
+                    style: iced::font::Style::Normal,
+                }),
+            }),
+            typst::syntax::Tag::Punctuation => Highlight::with_color(theme.punctuation),
+            typst::syntax::Tag::Escape => Highlight::with_color(theme.escape),
+            typst::syntax::Tag::Link => Highlight::with_color(theme.link),
+            typst::syntax::Tag::Raw => Highlight::from(Highlight {
+                color: Some(theme.raw),
+                font: Some(Font {
+                    family: Default::default(),
+                    weight: iced::font::Weight::Semibold,
+                    stretch: iced::font::Stretch::Normal,
+                    style: iced::font::Style::Normal,
+                }),
+            }),
+            typst::syntax::Tag::ListMarker => Highlight::from(Highlight {
+                color: Some(theme.list_marker),
+                font: Some(Font {
+                    family: Default::default(),
+                    weight: iced::font::Weight::Semibold,
+                    stretch: iced::font::Stretch::Normal,
+                    style: iced::font::Style::Normal,
+                }),
+            }),
+            typst::syntax::Tag::ListTerm => Highlight::from(Highlight {
+                color: Some(theme.list_term),
+                font: Some(Font {
+                    family: Default::default(),
+                    weight: iced::font::Weight::Semibold,
+                    stretch: iced::font::Stretch::Normal,
+                    style: iced::font::Style::Normal,
+                }),
+            }),
+            typst::syntax::Tag::MathOperator => Highlight::with_color(theme.math_operator),
+            typst::syntax::Tag::Operator => Highlight::with_color(theme.operator),
+            typst::syntax::Tag::Interpolated => Highlight::with_color(theme.interpolated),
+            typst::syntax::Tag::Error => Highlight::with_color(theme.error),
         };
         tags.push((node.range(), highlight));
     }

@@ -84,6 +84,32 @@ pub struct HighlighterTheme {
     pub string: Color,
     #[serde(with = "color_serde")]
     pub keyword: Color,
+    #[serde(with = "color_serde")]
+    pub math_delimiter: Color,
+    #[serde(with = "color_serde")]
+    pub reference: Color,
+    #[serde(with = "color_serde")]
+    pub label: Color,
+    #[serde(with = "color_serde")]
+    pub punctuation: Color,
+    #[serde(with = "color_serde")]
+    pub escape: Color,
+    #[serde(with = "color_serde")]
+    pub link: Color,
+    #[serde(with = "color_serde")]
+    pub raw: Color,
+    #[serde(with = "color_serde")]
+    pub list_marker: Color,
+    #[serde(with = "color_serde")]
+    pub list_term: Color,
+    #[serde(with = "color_serde")]
+    pub math_operator: Color,
+    #[serde(with = "color_serde")]
+    pub operator: Color,
+    #[serde(with = "color_serde")]
+    pub interpolated: Color,
+    #[serde(with = "color_serde")]
+    pub error: Color,
 }
 
 // impl HighlighterTheme {
@@ -108,6 +134,19 @@ impl Default for HighlighterTheme {
             comment: Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0),
             string: Color::from_rgb(50.0 / 255.0, 158.0 / 255.0, 117.0 / 255.0),
             keyword: Color::from_rgb(200.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
+            math_delimiter: Color::from_rgb(0.137, 0.612, 0.678),
+            reference: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
+            label: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
+            punctuation: Color::from_rgb(0.0, 0.0, 0.0),
+            escape: Color::from_rgb(0.0, 0.0, 0.0),
+            link: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
+            raw: Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0),
+            list_marker: Color::from_rgb(0.0, 0.0, 0.0),
+            list_term: Color::from_rgb(0.0, 0.0, 0.0),
+            math_operator: Color::from_rgb(0.0, 0.0, 0.0),
+            operator: Color::from_rgb(0.0, 0.0, 0.0),
+            interpolated: Color::from_rgb(0.0, 0.0, 0.0),
+            error: Color::from_rgb(200.0/255.0, 70.0/255.0, 200.0/255.0),
         }
     }
 }
