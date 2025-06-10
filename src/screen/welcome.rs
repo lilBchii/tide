@@ -7,9 +7,7 @@ use crate::file_manager::import::TEMPLATE;
 use crate::screen::component::modal;
 use crate::screen::component::modal::ProjectModal;
 use iced::advanced::text::Shaping;
-use iced::widget::{
-    horizontal_space, row, stack, svg, text, vertical_space, Button, Text,
-};
+use iced::widget::{button, horizontal_space, row, stack, svg, text, vertical_space};
 use iced::{
     widget::{column, container},
     Alignment, Element, Length, Task,
@@ -21,9 +19,13 @@ const WELCOME_BUTTON_PADDING: u16 = 2;
 const WELCOME_BUTTON_HEIGHT: u16 = 50;
 const WELCOME_BUTTON_WIDTH: u16 = 200;
 const FILE_BUTTON_HEIGHT: u16 = 30;
+const H1_FONT_SIZE: u16 = 75;
+const H2_FONT_SIZE: u16 = 20;
+const SPACING: u16 = 35;
+const TITLE_SPACING: u16 = 15;
 
 pub static LOGO: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../assets/icons/logo.svg"))
+    svg::Handle::from_memory(include_bytes!("../../assets/thierry_colored.svg"))
 });
 
 /// Represents the main _Welcome page_ shown on Tide startup.
@@ -90,55 +92,78 @@ impl Welcome {
                 }
                 _ => Task::none(),
             },
-            Message::ProjectModal(message) => self
-                .project_modal
-                .update(message)
-                .map(|e| Message::ToolBar(e)),
+            Message::ProjectModal(message) => {
+                self.project_modal.update(message).map(Message::ToolBar)
+            }
         }
     }
 
     /// Renders the full welcome screen, including shortcuts, recent files, and modal if visible.
     pub fn view(&self) -> Element<Message> {
         let tool_bar = welcome_toolbar().map(Message::ToolBar);
-        let shortcut_text = text("Shortcuts").shaping(Shaping::Advanced).size(20);
+
+        let title = row![
+            svg(LOGO.to_owned()).width(120),
+            text("Tide").shaping(Shaping::Advanced).size(H1_FONT_SIZE),
+        ]
+        .align_y(Alignment::Center);
+
+        let getting_started = container(column![
+            text("Getting started")
+                .shaping(Shaping::Advanced)
+                .size(H2_FONT_SIZE),
+            vertical_space().height(TITLE_SPACING),
+            welcome_button(
+                "New Project",
+                Message::ToolBar(toolbar::Message::NewProject),
+            ),
+            vertical_space().height(10),
+            welcome_button(
+                "Start from template",
+                Message::ToolBar(toolbar::Message::StartFromTemplate),
+            ),
+            vertical_space().height(10),
+            text("More options in “File” button of the tool bar.")
+                .shaping(Shaping::Advanced)
+        ]);
+
         let shortcuts = container(column![
-            shortcut_text,
+            text("Shortcuts")
+                .shaping(Shaping::Advanced)
+                .size(H2_FONT_SIZE),
+            vertical_space().height(TITLE_SPACING),
             row![
-                horizontal_space().width(20),
+                horizontal_space().width(SPACING),
                 column![
-                    Text::new("Open File").shaping(Shaping::Advanced),
-                    Text::new("New Project").shaping(Shaping::Advanced),
-                    Text::new("Save File").shaping(Shaping::Advanced),
-                    Text::new("Preview").shaping(Shaping::Advanced),
-                    Text::new("Copy").shaping(Shaping::Advanced),
-                    Text::new("Paste").shaping(Shaping::Advanced),
-                    Text::new("Select All").shaping(Shaping::Advanced),
+                    text("Open File").shaping(Shaping::Advanced),
+                    text("New Project").shaping(Shaping::Advanced),
+                    text("Save File").shaping(Shaping::Advanced),
+                    text("Preview").shaping(Shaping::Advanced),
+                    text("Copy").shaping(Shaping::Advanced),
+                    text("Paste").shaping(Shaping::Advanced),
+                    text("Select All").shaping(Shaping::Advanced),
                 ]
                 .align_x(Alignment::End),
-                horizontal_space().width(20),
+                horizontal_space().width(SPACING),
                 column![
-                    Text::new("Ctrl+O").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+N").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+S").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+S").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+C").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+V").shaping(Shaping::Advanced),
-                    Text::new("Ctrl+A").shaping(Shaping::Advanced),
+                    text("Ctrl+O").shaping(Shaping::Advanced),
+                    text("Ctrl+N").shaping(Shaping::Advanced),
+                    text("Ctrl+S").shaping(Shaping::Advanced),
+                    text("Ctrl+S").shaping(Shaping::Advanced),
+                    text("Ctrl+C").shaping(Shaping::Advanced),
+                    text("Ctrl+V").shaping(Shaping::Advanced),
+                    text("Ctrl+A").shaping(Shaping::Advanced),
                 ]
                 .align_x(Alignment::Start)
             ]
         ]);
-        let new_button = welcome_button(
-            "New Project",
-            Message::ToolBar(toolbar::Message::NewProject),
-        );
-        let start_button = welcome_button(
-            "Start from template",
-            Message::ToolBar(toolbar::Message::StartFromTemplate),
-        );
-        let title = text("Tide").shaping(Shaping::Advanced).size(75);
-        let recent_text = text("Recent Projects").shaping(Shaping::Advanced).size(20);
-        let mut recent = column![];
+
+        let mut recent = column![
+            text("Recent Projects")
+                .shaping(Shaping::Advanced)
+                .size(H2_FONT_SIZE),
+            vertical_space().height(TITLE_SPACING),
+        ];
         for project in self.recent_files.iter() {
             let dir = project.root_path.to_owned();
             let main = project.main.to_owned();
@@ -153,39 +178,24 @@ impl Welcome {
                 recent = recent.push(button);
             }
         }
-
         let recent_container = container(recent)
             .height(5 * FILE_BUTTON_HEIGHT)
             .width(Length::Shrink);
-        let getting_started = column![
-            text("Getting started").shaping(Shaping::Advanced).size(20),
-            vertical_space().height(10),
-            new_button,
-            vertical_space().height(20),
-            start_button,
-            vertical_space().height(10),
-            text("More options in “File” button of the tool bar.")
-                .shaping(Shaping::Advanced)
-        ];
+
         let r = row![
             getting_started,
             horizontal_space(),
             shortcuts,
             horizontal_space()
         ];
-        let c = column![
-            row![svg(LOGO.to_owned()).width(100), title],
-            r,
-            vertical_space().height(30),
-            recent_text,
-            recent_container
-        ];
+        let c = container(
+            column![title, r, recent_container]
+                .spacing(SPACING)
+                .align_x(Alignment::Start),
+        )
+        .padding(75);
 
-        let screen = column![
-            tool_bar,
-            vertical_space().height(50),
-            row![horizontal_space().width(50), c]
-        ];
+        let screen = column![tool_bar, c];
 
         if self.project_modal.visible {
             return stack![screen, self.project_modal.view().map(Message::ProjectModal)]
@@ -203,18 +213,13 @@ fn welcome_button<'a, Message: Clone + 'a>(
     label: &'a str,
     on_press: Message,
 ) -> Element<'a, Message> {
-    Button::new(
-        Text::new(label)
-            .shaping(Shaping::Advanced)
-            .width(150)
-            .center(),
-    )
-    .on_press(on_press)
-    .padding(WELCOME_BUTTON_PADDING)
-    .width(WELCOME_BUTTON_WIDTH)
-    .height(WELCOME_BUTTON_HEIGHT)
-    .style(toolbar_button)
-    .into()
+    button(text(label).shaping(Shaping::Advanced).width(150).center())
+        .on_press(on_press)
+        .padding(WELCOME_BUTTON_PADDING)
+        .width(WELCOME_BUTTON_WIDTH)
+        .height(WELCOME_BUTTON_HEIGHT)
+        .style(toolbar_button)
+        .into()
 }
 
 /// Creates a clickable button representing a recent file or project.
@@ -224,7 +229,7 @@ fn file_button<'a, Message: Clone + 'a>(
     label: String,
     on_press: Message,
 ) -> Element<'a, Message> {
-    Button::new(Text::new(label).shaping(Shaping::Advanced).center())
+    button(text(label).shaping(Shaping::Advanced).center())
         .on_press(on_press)
         .padding(WELCOME_BUTTON_PADDING)
         .width(Length::Shrink)

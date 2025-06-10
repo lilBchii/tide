@@ -1,7 +1,7 @@
 # Tide (Typst IDE)
 <div align="center">
-    <img width="120" height="120" src="https://github.com/user-attachments/assets/6a588b71-dd71-4e7f-8f19-43cea29818eb">
-    <sub><sup><p>Official Tide logo, designed by <a href="https://github.com/mey-vltn">@Mey</a>.</p></sup></sub>
+    <img width="120" height="120" src="https://github.com/lilBchii/tide/blob/main/assets/icons/thierry_with_bg.png">
+    <sub><sup><p>Official Tide logo, designed by <a href="https://github.com/lilBchii">@lilBchii</a>.</p></sup></sub>
 </div>
 
 Tide is a lightweight, cross-platform IDE for Typst, written in Rust with
