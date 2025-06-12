@@ -1,6 +1,9 @@
 use std::ops::Range;
 
-use crate::data::config::appearance::HighlighterTheme;
+use crate::{
+    data::config::appearance::HighlighterTheme,
+    font::{FONT_BOLD, FONT_ITALIC, FONT_SEMI_BOLD},
+};
 use iced::{Color, Font};
 use iced_core::text::highlighter::{self, Format};
 
@@ -70,71 +73,29 @@ fn highlight_tree(
             typst::syntax::Tag::Function => Highlight::with_color(theme.function),
             typst::syntax::Tag::String => Highlight::with_color(theme.string),
             typst::syntax::Tag::Number => Highlight::with_color(theme.number),
-            typst::syntax::Tag::Emph => Highlight::with_font(Font {
-                family: Default::default(),
-                weight: iced::font::Weight::Normal,
-                stretch: iced::font::Stretch::Normal,
-                style: iced::font::Style::Italic,
-            }),
+            typst::syntax::Tag::Emph => Highlight::with_font(FONT_ITALIC),
             typst::syntax::Tag::Strong | typst::syntax::Tag::Heading => {
-                Highlight::with_font(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Bold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                })
+                Highlight::with_font(FONT_BOLD)
             }
             typst::syntax::Tag::Keyword => Highlight::with_color(theme.keyword),
-            typst::syntax::Tag::MathDelimiter => Highlight::with_color(theme.math_delimiter),
-            typst::syntax::Tag::Ref => Highlight::from(Highlight {
-                color: Some(theme.reference),
-                font: Some(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Semibold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                }),
-            }),
-            typst::syntax::Tag::Label => Highlight::from(Highlight {
-                color: Some(theme.label),
-                font: Some(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Semibold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                }),
-            }),
+            typst::syntax::Tag::MathDelimiter => {
+                Highlight::with_color(theme.math_delimiter)
+            }
+            typst::syntax::Tag::Ref => Highlight::new(theme.reference, FONT_SEMI_BOLD),
+            typst::syntax::Tag::Label => Highlight::new(theme.label, FONT_SEMI_BOLD),
             typst::syntax::Tag::Punctuation => Highlight::with_color(theme.punctuation),
             typst::syntax::Tag::Escape => Highlight::with_color(theme.escape),
             typst::syntax::Tag::Link => Highlight::with_color(theme.link),
-            typst::syntax::Tag::Raw => Highlight::from(Highlight {
-                color: Some(theme.raw),
-                font: Some(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Semibold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                }),
-            }),
-            typst::syntax::Tag::ListMarker => Highlight::from(Highlight {
-                color: Some(theme.list_marker),
-                font: Some(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Semibold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                }),
-            }),
-            typst::syntax::Tag::ListTerm => Highlight::from(Highlight {
-                color: Some(theme.list_term),
-                font: Some(Font {
-                    family: Default::default(),
-                    weight: iced::font::Weight::Semibold,
-                    stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::Normal,
-                }),
-            }),
-            typst::syntax::Tag::MathOperator => Highlight::with_color(theme.math_operator),
+            typst::syntax::Tag::Raw => Highlight::new(theme.raw, FONT_SEMI_BOLD),
+            typst::syntax::Tag::ListMarker => {
+                Highlight::new(theme.list_marker, FONT_SEMI_BOLD)
+            }
+            typst::syntax::Tag::ListTerm => {
+                Highlight::new(theme.list_term, FONT_SEMI_BOLD)
+            }
+            typst::syntax::Tag::MathOperator => {
+                Highlight::with_color(theme.math_operator)
+            }
             typst::syntax::Tag::Operator => Highlight::with_color(theme.operator),
             typst::syntax::Tag::Interpolated => Highlight::with_color(theme.interpolated),
             typst::syntax::Tag::Error => Highlight::with_color(theme.error),
@@ -159,24 +120,24 @@ pub struct Highlight {
 }
 
 impl Highlight {
-    pub fn with_color(color: Color) -> Self {
+    pub fn new(
+        color: Option<Color>,
+        font: Font,
+    ) -> Self {
         Self {
-            color: Some(color),
-            font: None,
+            color,
+            font: Some(font),
         }
+    }
+
+    pub fn with_color(color: Option<Color>) -> Self {
+        Self { color, font: None }
     }
 
     pub fn with_font(font: Font) -> Self {
         Self {
             color: None,
             font: Some(font),
-        }
-    }
-
-    pub fn none() -> Self {
-        Self {
-            color: None,
-            font: None,
         }
     }
 

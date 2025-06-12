@@ -3,6 +3,7 @@ use iced::{widget::container, Element, Settings, Task, Theme};
 mod data;
 mod editor;
 mod file_manager;
+mod font;
 mod screen;
 mod widgets;
 mod world;

@@ -1,4 +1,4 @@
-use super::serialization::color_serde;
+use super::serialization::{color_serde, color_serde_maybe};
 use iced::{theme::Palette, Color, Theme};
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -74,79 +74,69 @@ pub struct ColorsConfig {
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct HighlighterTheme {
-    #[serde(with = "color_serde")]
-    pub function: Color,
-    #[serde(with = "color_serde")]
-    pub number: Color,
-    #[serde(with = "color_serde")]
-    pub comment: Color,
-    #[serde(with = "color_serde")]
-    pub string: Color,
-    #[serde(with = "color_serde")]
-    pub keyword: Color,
-    #[serde(with = "color_serde")]
-    pub math_delimiter: Color,
-    #[serde(with = "color_serde")]
-    pub reference: Color,
-    #[serde(with = "color_serde")]
-    pub label: Color,
-    #[serde(with = "color_serde")]
-    pub punctuation: Color,
-    #[serde(with = "color_serde")]
-    pub escape: Color,
-    #[serde(with = "color_serde")]
-    pub link: Color,
-    #[serde(with = "color_serde")]
-    pub raw: Color,
-    #[serde(with = "color_serde")]
-    pub list_marker: Color,
-    #[serde(with = "color_serde")]
-    pub list_term: Color,
-    #[serde(with = "color_serde")]
-    pub math_operator: Color,
-    #[serde(with = "color_serde")]
-    pub operator: Color,
-    #[serde(with = "color_serde")]
-    pub interpolated: Color,
-    #[serde(with = "color_serde")]
-    pub error: Color,
+    #[serde(default, with = "color_serde_maybe")]
+    pub function: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub number: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub comment: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub string: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub keyword: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub math_delimiter: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub reference: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub label: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub punctuation: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub escape: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub link: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub raw: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub list_marker: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub list_term: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub math_operator: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub operator: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub interpolated: Option<Color>,
+    #[serde(default, with = "color_serde_maybe")]
+    pub error: Option<Color>,
 }
-
-// impl HighlighterTheme {
-//     // maybe remove
-//     pub fn from_main_theme(main_theme: Theme) -> Self {
-//         let palette = main_theme.extended_palette();
-//         Self {
-//             function: palette.primary.base.color,
-//             number: palette.secondary.base.color,
-//             comment: palette.background.weak.color,
-//             string: palette.success.base.color,
-//             keyword: palette.danger.base.color,
-//         }
-//     }
-// }
 
 impl Default for HighlighterTheme {
     fn default() -> Self {
         Self {
-            function: Color::from_rgb(0.137, 0.612, 0.678),
-            number: Color::from_rgb(200.0 / 255.0, 85.0 / 255.0, 85.0 / 255.0),
-            comment: Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0),
-            string: Color::from_rgb(50.0 / 255.0, 158.0 / 255.0, 117.0 / 255.0),
-            keyword: Color::from_rgb(200.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0),
-            math_delimiter: Color::from_rgb(0.137, 0.612, 0.678),
-            reference: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
-            label: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
-            punctuation: Color::from_rgb(0.0, 0.0, 0.0),
-            escape: Color::from_rgb(0.0, 0.0, 0.0),
-            link: Color::from_rgb(255.0/255.0, 0.0/255.0, 50.0/255.0),
-            raw: Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0),
-            list_marker: Color::from_rgb(0.0, 0.0, 0.0),
-            list_term: Color::from_rgb(0.0, 0.0, 0.0),
-            math_operator: Color::from_rgb(0.0, 0.0, 0.0),
-            operator: Color::from_rgb(0.0, 0.0, 0.0),
-            interpolated: Color::from_rgb(0.0, 0.0, 0.0),
-            error: Color::from_rgb(200.0/255.0, 70.0/255.0, 200.0/255.0),
+            function: Some(Color::from_rgb(0.137, 0.612, 0.678)),
+            number: Some(Color::from_rgb(200.0 / 255.0, 85.0 / 255.0, 85.0 / 255.0)),
+            comment: Some(Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0)),
+            string: Some(Color::from_rgb(50.0 / 255.0, 158.0 / 255.0, 117.0 / 255.0)),
+            keyword: Some(Color::from_rgb(200.0 / 255.0, 100.0 / 255.0, 100.0 / 255.0)),
+            math_delimiter: Some(Color::from_rgb(0.137, 0.612, 0.678)),
+            reference: Some(Color::from_rgb(50.0 / 255.0, 100.0 / 255.0, 120.0 / 255.0)),
+            label: Some(Color::from_rgb(50.0 / 255.0, 100.0 / 255.0, 120.0 / 255.0)),
+            punctuation: None,
+            escape: None,
+            link: Some(Color::from_rgb(180.0 / 255.0, 1.0, 1.0)),
+            raw: Some(Color::from_rgb(130.0 / 255.0, 140.0 / 255.0, 145.0 / 255.0)),
+            list_marker: None,
+            list_term: None,
+            math_operator: Some(Color::from_rgb(
+                50.0 / 255.0,
+                158.0 / 255.0,
+                117.0 / 255.0,
+            )),
+            operator: None,
+            interpolated: None,
+            error: None,
         }
     }
 }
