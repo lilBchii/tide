@@ -1,7 +1,6 @@
 use super::serialization::{color_serde, color_serde_maybe};
 use iced::{theme::Palette, Color, Theme};
 use serde::Deserialize;
-use std::borrow::Cow;
 use std::path::PathBuf;
 use std::{collections::HashMap, fs};
 
@@ -9,10 +8,6 @@ use std::{collections::HashMap, fs};
 /// These pairs are automatically inserted when typing in the editor.
 const DEFAULT_AUTO_PAIRS: [(char, char); 4] =
     [('(', ')'), ('"', '"'), ('[', ']'), ('{', '}')];
-/// Embedded fallback font (Roboto Black) used if no font is found at the configured path.
-const DEFAULT_FONT: &[u8] = include_bytes!("../../../assets/fonts/Roboto-Black.ttf");
-/// Default path to the Roboto Black font on disk.
-const DEFAULT_FONT_PATH: &str = "assets/fonts/Roboto-Black.ttf";
 
 /// Root configuration structure loaded from a TOML file.
 ///
@@ -31,8 +26,6 @@ pub struct Config {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case", default = "GeneralConfig::default")]
 pub struct GeneralConfig {
-    /// Path to the font file used in the application.
-    pub font_path: String,
     /// Default font size for UI elements.
     pub font_size: u16,
     /// Scale factor for high-DPI displays.
@@ -172,32 +165,12 @@ impl Config {
             }
         }
     }
-
-    /// Loads the font specified in the configuration.
-    ///
-    /// Falls back to a default embedded font (`Roboto-Black`) if loading fails.
-    ///
-    /// Returns the font data as a `Cow` (`Borrowed` if default, `Owned` if read from file).
-    //configuration file doesn't exist -> self.general.font_path = DEFAULT_FONT_PATH
-    //configuration file exists but the font path is wrong -> DEFAULT_PATH is returned
-    //configuration file exists and the font path is correct -> the loaded font by fs::read() is returned
-    pub fn retrieve_font(&self) -> Cow<'static, [u8]> {
-        //unwrapping is dangerous, we use Cow instead
-        //anyway, Iced explicitly uses this type in the signature of its font function (impl Into<Cow<'static, [u8]>>)
-        fs::read(&self.general.font_path)
-            .map(Cow::Owned) //allocate the Vec<u8>
-            .unwrap_or_else(|err| {
-                eprintln!("Can't load font: {err}");
-                Cow::Borrowed(DEFAULT_FONT) //send the reference
-            })
-    }
 }
 
 impl Default for GeneralConfig {
     /// Returns default general configuration settings.
     fn default() -> Self {
         Self {
-            font_path: DEFAULT_FONT_PATH.to_string(),
             font_size: 14,
             window_scale_factor: 1.0,
         }

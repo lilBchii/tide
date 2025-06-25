@@ -1,3 +1,11 @@
+use std::borrow::Cow;
+
+use font::{
+    APP_BOLD_BYTES, APP_FONT_FAMILY_NAME, APP_ITALIC_BYTES, APP_REG_BYTES,
+    APP_SEMI_BOLD_BYTES, EDITOR_BOLD_BYTES, EDITOR_ITALIC_BYTES, EDITOR_REG_BYTES,
+    EDITOR_SEMI_BOLD_BYTES,
+};
+use iced::Font;
 use iced::{widget::container, Element, Settings, Task, Theme};
 
 mod data;
@@ -26,10 +34,21 @@ fn main() -> iced::Result {
     iced::application("tide", Tide::update, Tide::view)
         .settings(Settings {
             default_text_size: config.general.font_size.into(),
+            fonts: vec![
+                Cow::Borrowed(APP_REG_BYTES),
+                Cow::Borrowed(APP_ITALIC_BYTES),
+                Cow::Borrowed(APP_SEMI_BOLD_BYTES),
+                Cow::Borrowed(APP_BOLD_BYTES),
+                Cow::Borrowed(EDITOR_REG_BYTES),
+                Cow::Borrowed(EDITOR_ITALIC_BYTES),
+                Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
+                Cow::Borrowed(EDITOR_BOLD_BYTES),
+            ],
+            default_font: Font::with_name(APP_FONT_FAMILY_NAME),
             ..Default::default()
         })
         .theme(Tide::theme)
-        .font(config.retrieve_font()) //todo: .default_font(Font::with_name())
+        //.font(config.retrieve_font()) //todo: .default_font(Font::with_name())
         .resizable(true)
         .transparent(true)
         .scale_factor(Tide::scale_factor)

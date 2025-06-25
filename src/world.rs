@@ -18,19 +18,19 @@ use typst::{Library, World};
 use typst_ide::IdeWorld;
 
 const LIBERTINUS_SERIF_REGULAR: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerif-Regular.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerif-Regular.ttf");
 const LIBERTINUS_SERIF_BOLD: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerif-Bold.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerif-Bold.ttf");
 const LIBERTINUS_SERIF_ITALIC: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerif-Italic.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerif-Italic.ttf");
 const LIBERTINUS_SERIF_BOLD_ITALIC: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerif-BoldItalic.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerif-BoldItalic.ttf");
 const LIBERTINUS_SERIF_SEMIBOLD: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerif-Semibold.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerif-Semibold.ttf");
 const LIBERTINUS_SERIF_MATH: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusMath-Regular.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusMath-Regular.ttf");
 const LIBERTINUS_SERIF_INITIALS: &[u8] =
-    include_bytes!("../assets/fonts/LibertinusSerifInitials-Regular.ttf");
+    include_bytes!("../assets/fonts/libertinus/LibertinusSerifInitials-Regular.ttf");
 const NEW_CMM_MATH_REGULAR: &[u8] =
     include_bytes!("../assets/fonts/NewCMMath-Regular.otf");
 

@@ -7,7 +7,6 @@ use super::component::{
     toolbar::{self, editing_toolbar, open_url},
 };
 
-use crate::file_manager::export::svg::{export_svg, preview_svg};
 use crate::file_manager::export::template::export_template;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::file::{
@@ -32,6 +31,10 @@ use crate::{
 };
 use crate::{editor::bindings::bindings, file_manager::import::load::load_repo};
 use crate::{editor::buffer::Buffer, file_manager::import::load::load_file};
+use crate::{
+    file_manager::export::svg::{export_svg, preview_svg},
+    font::EDITOR_FONT_FAMILY_NAME,
+};
 use iced::widget::center;
 use iced::widget::text_editor::Edit;
 use iced::Length::Fixed;
@@ -276,7 +279,8 @@ impl Editing {
                     extension: "typ".to_string(),
                 },
                 |highlight, _theme| highlight.to_format(),
-            );
+            )
+            .font(Font::with_name(EDITOR_FONT_FAMILY_NAME));
 
         let cursor_pos = self.current.buffer.content.cursor_position();
 
