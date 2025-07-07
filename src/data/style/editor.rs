@@ -32,7 +32,7 @@ pub fn editor_style(
             },
             ..active
         },
-        Status::Focused => Style {
+        Status::Focused { is_hovered: _ } => Style {
             border: Border {
                 color: palette.primary.strong.color,
                 ..active.border

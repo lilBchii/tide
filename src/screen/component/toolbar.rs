@@ -14,14 +14,14 @@ use std::sync::LazyLock;
 use std::{io::ErrorKind, path::PathBuf};
 use typst::syntax::VirtualPath;
 
-const ICON_BUTTON_SIZE: u16 = 24;
-const ICON_BUTTON_PADDING: u16 = 4;
-const TOOLBAR_PADDING: u16 = 2;
-const TOOLBAR_SPACING: u16 = 6;
-const PREVIEW_BUTTON_SIZE: u16 = 60;
-const MAIN_BUTTON_SIZE: u16 = 40;
-const MENU_BUTTON_SIZE: u16 = 50;
-const TEXT_BUTTON_PADDING: u16 = 2;
+const ICON_BUTTON_SIZE: f32 = 24.0;
+const ICON_BUTTON_PADDING: f32 = 4.0;
+const TOOLBAR_PADDING: f32 = 2.0;
+const TOOLBAR_SPACING: f32 = 6.0;
+const PREVIEW_BUTTON_SIZE: f32 = 60.0;
+const MAIN_BUTTON_SIZE: f32 = 40.0;
+const MENU_BUTTON_SIZE: f32 = 50.0;
+const TEXT_BUTTON_PADDING: f32 = 2.0;
 
 static TYPST_UNIVERSE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!(
@@ -93,7 +93,7 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         Menu::new(items)
             .max_width(300.0)
             .offset(TOOLBAR_SPACING as f32)
-            .spacing(TOOLBAR_SPACING * 2)
+            .spacing(TOOLBAR_SPACING * 2.0)
     };
 
     #[rustfmt::skip]
@@ -156,7 +156,7 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         horizontal_space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
-    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2)
+    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)
     .spacing(TOOLBAR_SPACING);
     r.into()
 }
@@ -170,7 +170,7 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
         Menu::new(items)
             .max_width(300.0)
             .offset(TOOLBAR_SPACING as f32)
-            .spacing(TOOLBAR_SPACING * 2)
+            .spacing(TOOLBAR_SPACING * 2.0)
     };
 
     #[rustfmt::skip]
@@ -207,7 +207,7 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
         horizontal_space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
-    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2)
+    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)
     .spacing(TOOLBAR_SPACING);
 
     r.into()
@@ -259,7 +259,7 @@ fn icon_button<'a, Message: Clone + 'a>(
 fn text_button<'a, Message: Clone + 'a>(
     label: &'a str,
     on_press: Message,
-    width: u16,
+    width: f32,
 ) -> Element<'a, Message> {
     Button::new(
         Text::new(label)

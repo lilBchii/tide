@@ -7,7 +7,6 @@ use super::component::{
     toolbar::{self, editing_toolbar, open_url},
 };
 
-use crate::file_manager::export::template::export_template;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::file::{
     cache_project, get_templates_path, load_file_dialog, save_file_dialog,
@@ -17,7 +16,7 @@ use crate::file_manager::import::{UploadType, ALL_TYPES, TEMPLATE};
 use crate::screen::component::debug::DebugZone;
 use crate::screen::component::modal::{FileModal, ProjectModal};
 use crate::screen::component::pop_up::{PopUpElement, PopUpType};
-use crate::widgets::vsplit::VSplit;
+use crate::widgets::vsplit::Split;
 use crate::world::TideWorld;
 use crate::{
     data::config::appearance::EditorConfig, file_manager::file::load_repo_dialog,
@@ -35,6 +34,7 @@ use crate::{
     file_manager::export::svg::{export_svg, preview_svg},
     font::EDITOR_FONT_FAMILY_NAME,
 };
+use crate::{file_manager::export::template::export_template, widgets::vsplit};
 use iced::widget::center;
 use iced::widget::text_editor::Edit;
 use iced::Length::Fixed;
@@ -295,10 +295,12 @@ impl Editing {
             edit_col = stack_w_debug;
         } //debug
 
-        let mut main_screen = VSplit::new(file_tree, edit_col)
-            .strategy(crate::widgets::vsplit::Strategy::Left)
-            .split_at(split_left)
-            .on_resize(Message::ResizeTree); //VSplit without preview
+        let mut main_screen =
+            Split::new(file_tree, edit_col, self.split_at.0, Message::ResizeTree)
+                .strategy(vsplit::Strategy::Start)
+                .direction(vsplit::Direction::Horizontal);
+        // .split_at(split_left)
+        // .on_resize(Message::ResizeTree); //VSplit without preview
 
         if let Some(svg_handles) = &self.preview.handle {
             let mut svg_pages = vec![];
@@ -309,10 +311,12 @@ impl Editing {
                 Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
                     .width(Fill)
                     .height(Fill);
-            main_screen = VSplit::new(main_screen, preview)
-                .strategy(crate::widgets::vsplit::Strategy::Left)
-                .split_at(split_right)
-                .on_resize(Message::ResizePreview);
+            main_screen =
+                Split::new(main_screen, preview, self.split_at.1, Message::ResizeTree)
+                    .strategy(vsplit::Strategy::Start)
+                    .direction(vsplit::Direction::Horizontal);
+            // .split_at(split_right)
+            // .on_resize(Message::ResizePreview);
         } //VSplit with preview
 
         //--------//
@@ -328,22 +332,22 @@ impl Editing {
 
         let screen = column![tool_bar, main_screen, status_bar];
 
-        if let Some(completions) = &self.autocompletion_ctx.completions {
-            let selection = center(
-                SelectionList::new_with(
-                    completions,
-                    Message::ApplyAutocomplete,
-                    12.0,
-                    5.0,
-                    primary,
-                    None,
-                    Font::default(),
-                )
-                .width(Shrink)
-                .height(Fixed(100.0)),
-            );
-            return stack![screen, selection].into();
-        } //autocomplete
+        // if let Some(completions) = &self.autocompletion_ctx.completions {
+        //     let selection = center(
+        //         SelectionList::new_with(
+        //             completions,
+        //             Message::ApplyAutocomplete,
+        //             12.0,
+        //             5.0,
+        //             primary,
+        //             None,
+        //             Font::default(),
+        //         )
+        //         .width(Shrink)
+        //         .height(Fixed(100.0)),
+        //     );
+        //     return stack![screen, selection].into();
+        // } //autocomplete
 
         if let Some(pop_up) = &self.pop_up {
             return stack![screen, pop_up.view().map(Message::PopUp)].into();

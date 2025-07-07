@@ -30,10 +30,9 @@ use screen::{
 ///
 /// Loads configuration from a TOML file and launches the application using `iced::application`.
 fn main() -> iced::Result {
-    let config = Config::load(get_config_path());
-    iced::application("tide", Tide::update, Tide::view)
+    iced::application(Tide::new, Tide::update, Tide::view)
         .settings(Settings {
-            default_text_size: config.general.font_size.into(),
+            // TODO: default_font_size with configuration
             fonts: vec![
                 Cow::Borrowed(APP_REG_BYTES),
                 Cow::Borrowed(APP_ITALIC_BYTES),
@@ -52,7 +51,7 @@ fn main() -> iced::Result {
         .resizable(true)
         .transparent(true)
         .scale_factor(Tide::scale_factor)
-        .run_with(move || Tide::new(config))
+        .run()
 }
 
 /// The main application structure for Tide.
@@ -70,10 +69,11 @@ struct Tide {
 }
 
 impl Tide {
-    /// Constructs a new [`Tide`] instance with the provided configuration.
+    /// Constructs a new [`Tide`] instance.
     ///
     /// Initializes the welcome screen, theme, scale factor, and stores the config.
-    fn new(config: Config) -> (Self, Task<Message>) {
+    fn new() -> (Self, Task<Message>) {
+        let config = Config::load(get_config_path());
         (
             Self {
                 screen: Screen::Welcome(Welcome::new()),

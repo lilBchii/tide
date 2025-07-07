@@ -3,16 +3,17 @@ use crate::data::style::modal;
 use crate::data::style::modal::modal_text_style;
 use crate::screen::component::toolbar;
 use crate::screen::editing;
+use iced::advanced::text::Shaping;
 use iced::widget::{button, center, column, horizontal_space, row, text, text_input};
 use iced::widget::{container, opaque, vertical_space};
 use iced::{Alignment, Color, Task};
-use iced_core::text::Shaping;
 use std::io;
 use std::io::Result;
 use std::path::PathBuf;
 
-const MODAL_BUTTON_HEIGHT: u16 = 30;
-const MODAL_BUTTON_WIDTH: u16 = 80;
+const MODAL_BUTTON_HEIGHT: f32 = 30.0;
+const MODAL_BUTTON_WIDTH: f32 = 80.0;
+
 #[derive(Debug, Clone)]
 pub enum Message {
     /// Triggered when the user requests to create a file.

@@ -15,14 +15,14 @@ use iced::{
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-const WELCOME_BUTTON_PADDING: u16 = 2;
-const WELCOME_BUTTON_HEIGHT: u16 = 50;
-const WELCOME_BUTTON_WIDTH: u16 = 200;
-const FILE_BUTTON_HEIGHT: u16 = 30;
-const H1_FONT_SIZE: u16 = 75;
-const H2_FONT_SIZE: u16 = 20;
-const SPACING: u16 = 35;
-const TITLE_SPACING: u16 = 15;
+const WELCOME_BUTTON_PADDING: f32 = 2.0;
+const WELCOME_BUTTON_HEIGHT: f32 = 50.0;
+const WELCOME_BUTTON_WIDTH: f32 = 200.0;
+const FILE_BUTTON_HEIGHT: f32 = 30.0;
+const H1_FONT_SIZE: f32 = 75.0;
+const H2_FONT_SIZE: f32 = 20.0;
+const SPACING: f32 = 35.0;
+const TITLE_SPACING: f32 = 15.0;
 
 pub static LOGO: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!("../../assets/thierry_colored.svg"))
@@ -179,7 +179,7 @@ impl Welcome {
             }
         }
         let recent_container = container(recent)
-            .height(5 * FILE_BUTTON_HEIGHT)
+            .height(5.0 * FILE_BUTTON_HEIGHT)
             .width(Length::Shrink);
 
         let r = row![
