@@ -1,9 +1,6 @@
 use crate::data::style::button::validate_button;
 use crate::data::style::debug::debug_container_style;
-use iced::widget::text::Shaping;
-use iced::widget::{
-    button, column, container, opaque, row, text, Scrollable, Space, Text,
-};
+use iced::widget::{button, column, container, opaque, row, text, Scrollable, Space};
 use iced::{Element, Fill};
 
 /// A UI component that displays Typst-related error messages in a scrollable debug panel.
@@ -19,11 +16,6 @@ impl DebugZone {
         Self { typst_errors }
     }
 
-    /// Returns the string of formatted errors.
-    fn errors(&self) -> String {
-        format!("{}", self.typst_errors)
-    }
-
     /// Returns the Iced view for this debug zone.
     ///
     /// The view includes a close button and a scrollable area for the error text.
@@ -32,11 +24,11 @@ impl DebugZone {
             container(column![
                 row![
                     Space::with_width(Fill),
-                    button(Text::new("X").shaping(Shaping::Advanced))
+                    button(text("X"))
                         .on_press(Message::HideErrors)
                         .style(validate_button),
                 ],
-                Scrollable::new(text(self.errors()).shaping(Shaping::Advanced).size(18))
+                Scrollable::new(text(self.typst_errors.clone()).size(18))
             ])
             .style(debug_container_style)
             .width(Fill)

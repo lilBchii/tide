@@ -3,9 +3,8 @@ use crate::data::style::tooltip::tooltip_box;
 use crate::file_manager::export::errors::ExportError;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::import::UploadType;
-use iced::advanced::text::Shaping;
 use iced::widget::tooltip;
-use iced::widget::{button, horizontal_space, row, svg, Button, Text};
+use iced::widget::{button, horizontal_space, row, svg, text, Button};
 use iced::{alignment, Element, Length, Theme};
 use iced_aw::menu::{Item, Menu};
 use iced_aw::{menu_bar, menu_items};
@@ -137,8 +136,8 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
     );
 
     let main_file_path = match main_path {
-        Some(path) => Text::new(format!("{:?}", path.clone())).shaping(Shaping::Advanced),
-        None => Text::new("No main file...").shaping(Shaping::Advanced),
+        Some(path) => text(format!("{:?}", path.clone())),
+        None => text("No main file..."),
     };
     let preview_button =
         text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
@@ -220,7 +219,7 @@ fn menu_button(
     label: &str,
     message: Message,
 ) -> Button<Message> {
-    Button::new(Text::new(label).shaping(Shaping::Advanced))
+    Button::new(text(label))
         .on_press(message)
         .style(drop_down_menu_button)
         .width(Length::Fill)
@@ -244,7 +243,7 @@ fn icon_button<'a, Message: Clone + 'a>(
 
     tooltip(
         action.on_press(on_press),
-        Text::new(label).shaping(Shaping::Advanced),
+        text(label),
         tooltip::Position::FollowCursor,
     )
     .gap(20)
@@ -261,18 +260,13 @@ fn text_button<'a, Message: Clone + 'a>(
     on_press: Message,
     width: u16,
 ) -> Element<'a, Message> {
-    Button::new(
-        Text::new(label)
-            .shaping(Shaping::Advanced)
-            .width(20)
-            .center(),
-    )
-    .on_press(on_press)
-    .padding(TEXT_BUTTON_PADDING)
-    .width(width)
-    .height(ICON_BUTTON_SIZE)
-    .style(toolbar_button)
-    .into()
+    Button::new(text(label).width(20).center())
+        .on_press(on_press)
+        .padding(TEXT_BUTTON_PADDING)
+        .width(width)
+        .height(ICON_BUTTON_SIZE)
+        .style(toolbar_button)
+        .into()
 }
 
 /// Attempts to open a given URL or file `path` in the system's default handler.

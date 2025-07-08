@@ -6,7 +6,6 @@ use crate::file_manager::file::{
 use crate::file_manager::import::TEMPLATE;
 use crate::screen::component::modal;
 use crate::screen::component::modal::ProjectModal;
-use iced::advanced::text::Shaping;
 use iced::widget::{button, horizontal_space, row, stack, svg, text, vertical_space};
 use iced::{
     widget::{column, container},
@@ -104,14 +103,12 @@ impl Welcome {
 
         let title = row![
             svg(LOGO.to_owned()).width(120),
-            text("Tide").shaping(Shaping::Advanced).size(H1_FONT_SIZE),
+            text("Tide").size(H1_FONT_SIZE),
         ]
         .align_y(Alignment::Center);
 
         let getting_started = container(column![
-            text("Getting started")
-                .shaping(Shaping::Advanced)
-                .size(H2_FONT_SIZE),
+            text("Getting started").size(H2_FONT_SIZE),
             vertical_space().height(TITLE_SPACING),
             welcome_button(
                 "New Project",
@@ -124,44 +121,39 @@ impl Welcome {
             ),
             vertical_space().height(10),
             text("More options in “File” button of the tool bar.")
-                .shaping(Shaping::Advanced)
         ]);
 
         let shortcuts = container(column![
-            text("Shortcuts")
-                .shaping(Shaping::Advanced)
-                .size(H2_FONT_SIZE),
+            text("Shortcuts").size(H2_FONT_SIZE),
             vertical_space().height(TITLE_SPACING),
             row![
                 horizontal_space().width(SPACING),
                 column![
-                    text("Open File").shaping(Shaping::Advanced),
-                    text("New Project").shaping(Shaping::Advanced),
-                    text("Save File").shaping(Shaping::Advanced),
-                    text("Preview").shaping(Shaping::Advanced),
-                    text("Copy").shaping(Shaping::Advanced),
-                    text("Paste").shaping(Shaping::Advanced),
-                    text("Select All").shaping(Shaping::Advanced),
+                    text("Open File"),
+                    text("New Project"),
+                    text("Save File"),
+                    text("Preview"),
+                    text("Copy"),
+                    text("Paste"),
+                    text("Select All"),
                 ]
                 .align_x(Alignment::End),
                 horizontal_space().width(SPACING),
                 column![
-                    text("Ctrl+O").shaping(Shaping::Advanced),
-                    text("Ctrl+N").shaping(Shaping::Advanced),
-                    text("Ctrl+S").shaping(Shaping::Advanced),
-                    text("Ctrl+S").shaping(Shaping::Advanced),
-                    text("Ctrl+C").shaping(Shaping::Advanced),
-                    text("Ctrl+V").shaping(Shaping::Advanced),
-                    text("Ctrl+A").shaping(Shaping::Advanced),
+                    text("Ctrl+O"),
+                    text("Ctrl+N"),
+                    text("Ctrl+S"),
+                    text("Ctrl+S"),
+                    text("Ctrl+C"),
+                    text("Ctrl+V"),
+                    text("Ctrl+A"),
                 ]
                 .align_x(Alignment::Start)
             ]
         ]);
 
         let mut recent = column![
-            text("Recent Projects")
-                .shaping(Shaping::Advanced)
-                .size(H2_FONT_SIZE),
+            text("Recent Projects").size(H2_FONT_SIZE),
             vertical_space().height(TITLE_SPACING),
         ];
         for project in self.recent_files.iter() {
@@ -213,7 +205,7 @@ fn welcome_button<'a, Message: Clone + 'a>(
     label: &'a str,
     on_press: Message,
 ) -> Element<'a, Message> {
-    button(text(label).shaping(Shaping::Advanced).width(150).center())
+    button(text(label).width(150).center())
         .on_press(on_press)
         .padding(WELCOME_BUTTON_PADDING)
         .width(WELCOME_BUTTON_WIDTH)
@@ -229,7 +221,7 @@ fn file_button<'a, Message: Clone + 'a>(
     label: String,
     on_press: Message,
 ) -> Element<'a, Message> {
-    button(text(label).shaping(Shaping::Advanced).center())
+    button(text(label).center())
         .on_press(on_press)
         .padding(WELCOME_BUTTON_PADDING)
         .width(Length::Shrink)

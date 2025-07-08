@@ -1,12 +1,11 @@
 use std::{path::PathBuf, sync::LazyLock};
 
 use crate::data::style::file_tree::{main_style, selected_file, svg_icon};
-use iced::advanced::text::Shaping;
 use iced::{
     padding,
     widget::{
-        button, column, container, horizontal_space, mouse_area, row, svg,
-        text::Wrapping, vertical_rule, Text,
+        button, column, container, horizontal_space, mouse_area, row, svg, text,
+        text::Wrapping, vertical_rule,
     },
     Alignment, Element, Length, Radians,
 };
@@ -413,9 +412,7 @@ impl File {
             _ => {
                 let mut row = row![
                     svg(self.icon.clone()).width(22).style(svg_icon),
-                    Text::new(self.name.clone())
-                        .shaping(Shaping::Advanced)
-                        .wrapping(Wrapping::None)
+                    text(self.name.clone()).wrapping(Wrapping::None)
                 ]
                 .align_y(Alignment::Center)
                 .width(Length::Fill)
@@ -424,10 +421,7 @@ impl File {
                 if let Some(path) = main_path {
                     if *path == self.path {
                         row = row.push(
-                            Text::new(" (main)")
-                                .shaping(Shaping::Advanced)
-                                .wrapping(Wrapping::None)
-                                .style(main_style),
+                            text(" (main)").wrapping(Wrapping::None).style(main_style),
                         );
                     }
                 }
@@ -492,9 +486,7 @@ fn dir_button<'a, Message: Clone + 'a>(
                 .rotation(Radians(if is_open { FRAC_PI_2 } else { 0.0 }))
                 .width(24)
                 .style(svg_icon),
-            Text::new(name)
-                .shaping(Shaping::Advanced)
-                .wrapping(Wrapping::Word)
+            text(name).wrapping(Wrapping::Word)
         ]
         .align_y(Alignment::Center)
         .width(Length::Fill),

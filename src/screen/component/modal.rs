@@ -6,7 +6,6 @@ use crate::screen::editing;
 use iced::widget::{button, center, column, horizontal_space, row, text, text_input};
 use iced::widget::{container, opaque, vertical_space};
 use iced::{Alignment, Color, Task};
-use iced_core::text::Shaping;
 use std::io;
 use std::io::Result;
 use std::path::PathBuf;
@@ -205,8 +204,7 @@ impl ProjectModal {
                 ],
                 text(self.warning_text.clone())
                     .size(15)
-                    .style(modal_text_style)
-                    .shaping(Shaping::Advanced),
+                    .style(modal_text_style),
                 vertical_space().height(10),
                 row![
                     button(text("Create").center())

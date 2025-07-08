@@ -1,7 +1,4 @@
 use iced::font::Weight::Bold;
-
-use iced::advanced::text::Shaping;
-use iced::advanced::widget::Text;
 use iced::widget::{
     button, center, container, horizontal_space, opaque, row, text, Column, Row,
 };
@@ -60,14 +57,14 @@ impl PopUpElement {
                     .style(title_text)
                     .size(24),
             )
-            .push(text(self.details()).shaping(Shaping::Advanced).size(20))
+            .push(text(self.details()).size(20))
             .spacing(20);
         let row = match self.pop_type {
             PopUpType::Confirm(id) => button_row(Message::DeleteFile(id)),
             _ => Row::new()
                 .push(horizontal_space().width(500))
                 .push(
-                    button(Text::new("Ok").shaping(Shaping::Advanced))
+                    button(text("Ok"))
                         .on_press(Message::HidePopUp)
                         .style(validate_button),
                 )
@@ -131,12 +128,10 @@ pub enum Message {
 fn button_row<'a>(on_press: Message) -> Row<'a, Message> {
     row![
         horizontal_space().width(500),
-        button(Text::new("Cancel").shaping(Shaping::Advanced))
+        button(text("Cancel"))
             .on_press(Message::HidePopUp)
             .style(cancel_button),
         horizontal_space().width(20),
-        button(Text::new("Ok").shaping(Shaping::Advanced))
-            .on_press(on_press)
-            .style(validate_button)
+        button(text("Ok")).on_press(on_press).style(validate_button)
     ]
 }
