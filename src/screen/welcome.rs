@@ -58,7 +58,8 @@ impl Welcome {
 
     /// Updates the welcome view based on incoming [`Message`]s.
     ///
-    /// Handles interactions such as starting a new project or responding to modal actions.
+    /// Handles interactions such as starting a new project or responding to modal
+    /// actions.
     pub fn update(
         &mut self,
         message: Message,
@@ -98,7 +99,8 @@ impl Welcome {
         }
     }
 
-    /// Renders the full welcome screen, including shortcuts, recent files, and modal if visible.
+    /// Renders the full welcome screen, including shortcuts, recent files, and modal
+    /// if visible.
     pub fn view(&self) -> Element<Message> {
         let tool_bar = welcome_toolbar().map(Message::ToolBar);
 

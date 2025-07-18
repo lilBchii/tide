@@ -12,7 +12,7 @@ const DEFAULT_AUTO_PAIRS: [(char, char); 4] =
 /// Root configuration structure loaded from a TOML file.
 ///
 /// Contains grouped settings for general application behavior, color themes, and editor preferences.
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct Config {
     /// General application settings (font path, scale factor, etc.).
     pub general: GeneralConfig,
@@ -23,7 +23,7 @@ pub struct Config {
 }
 
 /// Configuration for general application behavior.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "kebab-case", default = "GeneralConfig::default")]
 pub struct GeneralConfig {
     /// Default font size for UI elements.
@@ -45,7 +45,7 @@ pub struct EditorConfig {
 }
 
 /// Configuration for UI theme colors.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct ColorsConfig {
     /// Background color of the UI.

@@ -19,7 +19,7 @@ mod world;
 use crate::file_manager::file::{get_config_path, load_repo_dialog};
 use crate::screen::component::toolbar;
 use crate::screen::welcome::Welcome;
-use data::config::appearance::Config;
+use data::config::appearance::{Config, GeneralConfig};
 use screen::{
     editing::{self, Editing},
     welcome::{self},
@@ -30,22 +30,11 @@ use screen::{
 ///
 /// Loads configuration from a TOML file and launches the application using `iced::application`.
 fn main() -> iced::Result {
-    iced::application(Tide::new, Tide::update, Tide::view)
-        .settings(Settings {
-            // TODO: default_font_size with configuration
-            fonts: vec![
-                Cow::Borrowed(APP_REG_BYTES),
-                Cow::Borrowed(APP_ITALIC_BYTES),
-                Cow::Borrowed(APP_SEMI_BOLD_BYTES),
-                Cow::Borrowed(APP_BOLD_BYTES),
-                Cow::Borrowed(EDITOR_REG_BYTES),
-                Cow::Borrowed(EDITOR_ITALIC_BYTES),
-                Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
-                Cow::Borrowed(EDITOR_BOLD_BYTES),
-            ],
-            default_font: Font::with_name(APP_FONT_FAMILY_NAME),
-            ..Default::default()
-        })
+    let config = Config::load(get_config_path());
+    let settings = settings(&config.general);
+
+    iced::application(move || Tide::new(config.clone()), Tide::update, Tide::view)
+        .settings(settings)
         .theme(Tide::theme)
         //.font(config.retrieve_font()) //todo: .default_font(Font::with_name())
         .resizable(true)
@@ -72,8 +61,7 @@ impl Tide {
     /// Constructs a new [`Tide`] instance.
     ///
     /// Initializes the welcome screen, theme, scale factor, and stores the config.
-    fn new() -> (Self, Task<Message>) {
-        let config = Config::load(get_config_path());
+    fn new(config: Config) -> (Self, Task<Message>) {
         (
             Self {
                 screen: Screen::Welcome(Welcome::new()),
@@ -193,4 +181,22 @@ impl Tide {
 enum Message {
     Editor(editing::Message),
     Welcome(welcome::Message),
+}
+
+fn settings(config: &GeneralConfig) -> Settings {
+    Settings {
+        fonts: vec![
+            Cow::Borrowed(APP_REG_BYTES),
+            Cow::Borrowed(APP_ITALIC_BYTES),
+            Cow::Borrowed(APP_SEMI_BOLD_BYTES),
+            Cow::Borrowed(APP_BOLD_BYTES),
+            Cow::Borrowed(EDITOR_REG_BYTES),
+            Cow::Borrowed(EDITOR_ITALIC_BYTES),
+            Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
+            Cow::Borrowed(EDITOR_BOLD_BYTES),
+        ],
+        default_font: Font::with_name(APP_FONT_FAMILY_NAME),
+        default_text_size: config.font_size.into(),
+        ..Default::default()
+    }
 }
