@@ -2,6 +2,9 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io;
 
+use typst::diag::SourceDiagnostic;
+use typst::ecow::EcoVec;
+
 //todo: handle SourceDiagnostic instead of String
 
 /// Describes possible failures during compilation, export, or writing.
@@ -10,7 +13,7 @@ pub enum ExportError {
     /// The Typst compilation process failed.
     ///
     /// Contains a message detailing the compilation error.
-    CompilationError(String),
+    CompilationError(EcoVec<SourceDiagnostic>),
     /// PDF generation failed after successful compilation.
     ///
     /// Contains a message describing the reason for the failure.
@@ -31,8 +34,8 @@ impl Display for ExportError {
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
         match self {
-            ExportError::CompilationError(msg) => {
-                write!(f, "Can't compile document: {}", msg)
+            ExportError::CompilationError(_msg) => {
+                write!(f, "Can't compile document, please check the compilation errors in the debug zone.")
             }
             ExportError::PdfGenerationError(msg) => {
                 write!(f, "Can't generate PDF: {}", msg)

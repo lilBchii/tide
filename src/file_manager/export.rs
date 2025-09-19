@@ -28,10 +28,5 @@ fn compile_document(world: &TideWorld) -> Result<PagedDocument, ExportError> {
     if !warnings.is_empty() {
         eprintln!("Typst warnings: {:?}", warnings);
     }
-    output.map_err(|e| {
-        ExportError::CompilationError(format!(
-            "{:?}",
-            e.iter().map(|s| s.message.clone()).collect::<Vec<_>>()
-        ))
-    })
+    output.map_err(ExportError::CompilationError)
 }

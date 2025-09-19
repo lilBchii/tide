@@ -1,5 +1,4 @@
 use super::component::{
-    debug,
     file_tree::{self, FileTree},
     modal, pop_up,
     preview::Preview,
@@ -7,14 +6,11 @@ use super::component::{
     toolbar::{self, editing_toolbar, open_url},
 };
 
-use crate::file_manager::export::template::export_template;
-use crate::file_manager::export::ExportType;
 use crate::file_manager::file::{
     cache_project, get_templates_path, load_file_dialog, save_file_dialog,
     save_file_disk, ProjectCache,
 };
 use crate::file_manager::import::{UploadType, ALL_TYPES, TEMPLATE};
-use crate::screen::component::debug::DebugZone;
 use crate::screen::component::modal::{FileModal, ProjectModal};
 use crate::screen::component::pop_up::{PopUpElement, PopUpType};
 use crate::widgets::vsplit::VSplit;
@@ -24,6 +20,11 @@ use crate::{
 };
 use crate::{
     data::config::appearance::HighlighterTheme, file_manager::export::pdf::export_pdf,
+};
+use crate::{data::style::button::cancel_button, file_manager::export::ExportType};
+use crate::{
+    data::style::debug::debug_container_style,
+    file_manager::export::template::export_template,
 };
 use crate::{editor, file_manager::export::errors::ExportError};
 use crate::{
@@ -35,13 +36,13 @@ use crate::{
     file_manager::export::svg::{export_svg, preview_svg},
     font::EDITOR_FONT_FAMILY_NAME,
 };
-use iced::widget::center;
 use iced::widget::text_editor::Edit;
+use iced::widget::{button, center};
 use iced::Length::Fixed;
 use iced::{
     advanced::svg::Handle,
     widget::{
-        column, stack, svg,
+        column, container, horizontal_space, row, stack, svg, text,
         text_editor::{Action, Binding, Motion},
         Column, Scrollable, TextEditor,
     },
@@ -56,9 +57,12 @@ use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
-use typst::ecow::EcoString;
 use typst::syntax::{FileId, VirtualPath};
 use typst::World;
+use typst::{
+    diag::SourceDiagnostic,
+    ecow::{EcoString, EcoVec},
+};
 use typst_ide::Completion;
 use typst_pdf::PdfOptions;
 
@@ -89,7 +93,7 @@ pub struct Editing {
     /// Pop-up element currently displayed over the UI.
     pop_up: Option<PopUpElement>,
     /// Debug UI zone (e.g. diagnostics, logs).
-    debug: Option<DebugZone>,
+    debug: Option<EcoVec<SourceDiagnostic>>,
     /// Modal window for creating a file.
     file_modal: FileModal,
     /// Modal window for creating a new project.
@@ -291,8 +295,7 @@ impl Editing {
 
         let mut edit_col = Column::new().push(editor);
         if let Some(debug) = &self.debug {
-            let stack_w_debug = edit_col.push(debug.view().map(Message::DebugSpace));
-            edit_col = stack_w_debug;
+            edit_col = edit_col.push(view_errors(debug));
         } //debug
 
         let mut main_screen = VSplit::new(file_tree, edit_col)
@@ -403,16 +406,14 @@ impl Editing {
                     },
                 }
             }
-            Message::DebugSpace(message) => match message {
-                debug::Message::ShowErrors(debug_zone) => {
-                    self.debug = Some(debug_zone);
-                    Task::none()
-                }
-                debug::Message::HideErrors => {
-                    self.debug = None;
-                    Task::none()
-                }
-            },
+            Message::ShowErrors(err) => {
+                self.debug = Some(err);
+                Task::none()
+            }
+            Message::HideErrors => {
+                self.debug = None;
+                Task::none()
+            }
 
             Message::ApplyAutocomplete(selected, completion) => {
                 self.autocompletion_ctx.completions = None;
@@ -497,15 +498,18 @@ impl Editing {
                         },
                         Message::PreviewLoaded,
                     ),
-                    Err(err) => Task::done(Message::DebugSpace(
-                        debug::Message::ShowErrors(DebugZone::new(err.to_string())),
-                    )),
+                    Err(err) => match err {
+                        ExportError::CompilationError(err) => {
+                            Task::done(Message::ShowErrors(err))
+                        }
+                        _ => Task::none(),
+                    },
                 }
             }
             Message::PreviewLoaded(svg_handles) => {
                 println!("async: preview loaded");
                 self.preview.handle = Some(svg_handles);
-                Task::done(Message::DebugSpace(debug::Message::HideErrors))
+                Task::done(Message::HideErrors)
             }
             Message::ToolBar(message) => {
                 match message {
@@ -886,6 +890,37 @@ impl Editing {
     }
 }
 
+fn view_errors<'a>(errors: &EcoVec<SourceDiagnostic>) -> Element<'a, Message> {
+    container(column![
+        row![
+            horizontal_space(),
+            button(text("X"))
+                .on_press(Message::HideErrors)
+                .style(cancel_button),
+        ],
+        Scrollable::new(column(errors.iter().map(|diagnostic| {
+            let mut error_message = column![];
+            if let Some(span_id) = diagnostic.span.id() {
+                error_message = error_message
+                    .push(text(span_id.vpath().as_rootless_path().to_string_lossy()));
+            }
+            error_message = error_message.push(text(diagnostic.message.to_string()));
+            error_message = error_message.push(column(
+                diagnostic
+                    .hints
+                    .iter()
+                    .map(|hint| text(hint.to_string()).into()),
+            ));
+            error_message.into()
+        })))
+    ])
+    .style(debug_container_style)
+    .padding(6)
+    .width(Fill)
+    .height(250)
+    .into()
+}
+
 /// Initializes the [`TideWorld`] with a temporary, fake, main file.
 fn init_world() -> TideWorld {
     let main_id = FileId::new_fake(VirtualPath::new("main.typ"));
@@ -1047,8 +1082,6 @@ pub enum Message {
     ApplyAutocomplete(usize, DisplayableCompletion),
     /// A message emitted by the currently displayed pop-up window.
     PopUp(pop_up::Message),
-    /// A message emitted by the debug zone (e.g., toggling view or filtering logs).
-    DebugSpace(debug::Message),
     /// Indicates a cached project was loaded or changed.
     ///
     /// `None` means the main file doesn't have to be reset.
@@ -1059,6 +1092,9 @@ pub enum Message {
     FileModal(modal::Message),
     /// A message emitted by the "new project" modal.
     ProjectModal(modal::Message),
+
+    ShowErrors(EcoVec<SourceDiagnostic>),
+    HideErrors,
 }
 
 #[cfg(test)]
