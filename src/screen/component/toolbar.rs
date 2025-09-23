@@ -3,38 +3,20 @@ use crate::data::style::tooltip::tooltip_box;
 use crate::file_manager::export::errors::ExportError;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::import::UploadType;
-use iced::widget::tooltip;
-use iced::widget::{button, horizontal_space, row, svg, text, Button};
-use iced::{alignment, Element, Length, Theme};
+use crate::icon;
+use iced::widget::{button, horizontal_space, row, text, tooltip, Text};
+use iced::{alignment, Alignment, Element, Length, Theme};
 use iced_aw::menu::{Item, Menu};
 use iced_aw::{menu_bar, menu_items};
 use open::that;
-use std::sync::LazyLock;
 use std::{io::ErrorKind, path::PathBuf};
 use typst::syntax::VirtualPath;
 
 const ICON_BUTTON_SIZE: u16 = 24;
-const ICON_BUTTON_PADDING: u16 = 4;
+const BUTTON_PADDING: u16 = 4;
 const TOOLBAR_PADDING: u16 = 2;
 const TOOLBAR_SPACING: u16 = 6;
-const PREVIEW_BUTTON_SIZE: u16 = 60;
-const MAIN_BUTTON_SIZE: u16 = 40;
 const MENU_BUTTON_SIZE: u16 = 50;
-const TEXT_BUTTON_PADDING: u16 = 2;
-
-static TYPST_UNIVERSE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!(
-        "../../../assets/icons/typst_universe_icon.svg"
-    ))
-});
-static TYPST_DOCS_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/typst_help_icon.svg"))
-});
-static TYPST_QUICK_EXPORT_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!(
-        "../../../assets/icons/typst_quick_export_icon.svg"
-    ))
-});
 
 /// Messages used in the context of toolbar interactions.
 #[derive(Debug, Clone)]
@@ -121,16 +103,13 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         )).width(240.0))
     );
 
-    let universe_button = icon_button(
-        TYPST_UNIVERSE_ICON.clone(),
-        "Typst Universe",
-        Message::Universe,
-    );
+    let universe_button =
+        icon_button(icon::packages(), "Typst Universe", Message::Universe);
 
-    let help_button = icon_button(TYPST_DOCS_ICON.clone(), "Help", Message::Help);
+    let help_button = icon_button(icon::help(), "Help", Message::Help);
 
     let export_button = icon_button(
-        TYPST_QUICK_EXPORT_ICON.clone(),
+        icon::upload(),
         "Quick Export",
         Message::Export(ExportType::PDF),
     );
@@ -139,8 +118,17 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         Some(path) => text(format!("{:?}", path.clone())),
         None => text("No main file..."),
     };
-    let preview_button =
-        text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
+    let preview_button = button(
+        row![icon::eye(), text("Preview")]
+            .align_y(Alignment::Center)
+            .spacing(BUTTON_PADDING),
+    )
+    .width(Length::Shrink)
+    .padding(BUTTON_PADDING)
+    .height(ICON_BUTTON_SIZE)
+    .style(toolbar_button)
+    .on_press(Message::ForcePreview);
+    // text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
 
     let r = row![
         horizontal_space().width(TOOLBAR_SPACING),
@@ -188,13 +176,10 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
         )).width(240.0))
     );
 
-    let universe_button = icon_button(
-        TYPST_UNIVERSE_ICON.clone(),
-        "Typst Universe",
-        Message::Universe,
-    );
+    let universe_button =
+        icon_button(icon::packages(), "Typst Universe", Message::Universe);
 
-    let help_button = icon_button(TYPST_DOCS_ICON.clone(), "Help", Message::Help);
+    let help_button = icon_button(icon::help(), "Help", Message::Help);
 
     let r = row![
         horizontal_space().width(TOOLBAR_SPACING),
@@ -218,28 +203,29 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
 fn menu_button(
     label: &str,
     message: Message,
-) -> Button<Message> {
-    Button::new(text(label))
+) -> Element<'_, Message> {
+    button(text(label))
         .on_press(message)
         .style(drop_down_menu_button)
         .width(Length::Fill)
+        .into()
 }
 
 /// Creates an icon-based button with a tooltip, styled for the toolbar.
 ///
-/// `path` is the path to the image asset used as an icon, `label` the tooltip text displayed on hover,
+/// `label` is the tooltip text displayed on hover,
 /// and `on_press` the message to emit when the button is pressed.
 fn icon_button<'a, Message: Clone + 'a>(
-    bytes: svg::Handle,
+    icon: Text<'a>,
     label: &'a str,
     on_press: Message,
 ) -> Element<'a, Message> {
-    let action = button(svg(bytes).width(24).height(24))
+    let action = button(icon.width(24).height(24).center())
         .width(ICON_BUTTON_SIZE)
         .height(ICON_BUTTON_SIZE)
         .clip(true)
         .style(toolbar_button)
-        .padding(ICON_BUTTON_PADDING);
+        .padding(BUTTON_PADDING);
 
     tooltip(
         action.on_press(on_press),
@@ -260,9 +246,9 @@ fn text_button<'a, Message: Clone + 'a>(
     on_press: Message,
     width: u16,
 ) -> Element<'a, Message> {
-    Button::new(text(label).width(20).center())
+    button(text(label).width(20).center())
         .on_press(on_press)
-        .padding(TEXT_BUTTON_PADDING)
+        .padding(BUTTON_PADDING)
         .width(width)
         .height(ICON_BUTTON_SIZE)
         .style(toolbar_button)

@@ -1,44 +1,26 @@
-use std::{path::PathBuf, sync::LazyLock};
+use std::path::PathBuf;
 
-use crate::data::style::file_tree::{main_style, selected_file, svg_icon};
+use crate::{
+    data::style::{
+        button::toolbar_button,
+        file_tree::{main_style, selected_file},
+        tooltip::tooltip_box,
+    },
+    icon,
+};
 use iced::{
     padding,
     widget::{
-        button, column, container, horizontal_space, mouse_area, row, svg, text,
-        text::Wrapping, vertical_rule,
+        button, column, container, horizontal_space, mouse_area, row, text,
+        text::Wrapping, tooltip, vertical_rule, Text,
     },
-    Alignment, Element, Length, Radians,
+    Alignment, Element, Length,
 };
-use std::f32::consts::FRAC_PI_2;
-
-pub static GENERIC_FILE: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/file.svg"))
-});
-pub static DIR_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/directory.svg"))
-});
-pub static UNKNOWN_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/question_mark.svg"))
-});
-pub static SVG_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/file_svg.svg"))
-});
-pub static IMAGE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/image.svg"))
-});
-pub static BIB_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/library.svg"))
-});
-pub static MARK_MAIN: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/mark_main.svg"))
-});
-pub static DELETE_ICON: LazyLock<svg::Handle> = LazyLock::new(|| {
-    svg::Handle::from_memory(include_bytes!("../../../assets/icons/delete.svg"))
-});
 
 const HEIGHT: f32 = 20.0;
 const INDENT: f32 = 10.0;
 const SPACING: f32 = 5.0;
+const ICON_BUTTON_SIZE: u16 = 24;
 
 /// Represents messages triggered by user interactions with the file tree.
 #[derive(Clone, Debug)]
@@ -347,8 +329,6 @@ pub struct File {
     path: PathBuf,
     /// The file display name.
     name: String,
-    /// The associated icon of the file.
-    icon: svg::Handle,
 }
 
 impl File {
@@ -357,21 +337,9 @@ impl File {
     /// Automatically assigns an icon based on file extension.
     pub fn new(path: &PathBuf) -> Self {
         let name = path.file_name().unwrap().to_str().unwrap();
-        let icon = match path.extension() {
-            Some(ext) => match ext.to_str() {
-                Some("typ") => GENERIC_FILE.clone(),
-                Some("png") | Some("jpg") | Some("jpeg") => IMAGE_ICON.clone(),
-                Some("svg") => SVG_ICON.clone(),
-                Some("bib") | Some("toml") => BIB_ICON.clone(),
-                _ => UNKNOWN_ICON.clone(),
-            },
-            None => UNKNOWN_ICON.clone(),
-        };
-
         Self {
             path: path.into(),
             name: name.into(),
-            icon,
         }
     }
 
@@ -390,13 +358,14 @@ impl File {
                 container(
                     mouse_area(
                         row![
-                            //Text::new(self.name.clone()),
                             icon_button(
-                                MARK_MAIN.clone(),
+                                icon::flag(),
+                                "Turn this file main",
                                 Message::ChangeMainFile(self.path.clone())
                             ),
                             icon_button(
-                                DELETE_ICON.clone(),
+                                icon::trash(),
+                                "Delete this file",
                                 Message::DeleteFile(self.path.clone())
                             )
                         ]
@@ -410,13 +379,20 @@ impl File {
                 HEIGHT,
             ),
             _ => {
-                let mut row = row![
-                    svg(self.icon.clone()).width(22).style(svg_icon),
-                    text(self.name.clone()).wrapping(Wrapping::None)
-                ]
-                .align_y(Alignment::Center)
-                .width(Length::Fill)
-                .spacing(SPACING);
+                let icon = match self.path.extension() {
+                    Some(ext) => match ext.to_str() {
+                        Some("png") | Some("jpg") | Some("jpeg") => icon::image_file(),
+                        Some("pdf") => icon::pdf_file(),
+                        Some("bib") | Some("toml") => icon::book(),
+                        _ => icon::text_file(),
+                    },
+                    None => icon::text_file(),
+                };
+                let mut row =
+                    row![icon, text(self.name.clone()).wrapping(Wrapping::None)]
+                        .align_y(Alignment::Center)
+                        .width(Length::Fill)
+                        .spacing(SPACING);
 
                 if let Some(path) = main_path {
                     if *path == self.path {
@@ -482,10 +458,13 @@ fn dir_button<'a, Message: Clone + 'a>(
 ) -> Element<'a, Message> {
     mouse_area(
         row![
-            svg(DIR_ICON.clone())
-                .rotation(Radians(if is_open { FRAC_PI_2 } else { 0.0 }))
-                .width(24)
-                .style(svg_icon),
+            horizontal_space().width(10),
+            if is_open {
+                icon::open_dir()
+            } else {
+                icon::close_dir()
+            }
+            .width(18),
             text(name).wrapping(Wrapping::Word)
         ]
         .align_y(Alignment::Center)
@@ -495,14 +474,25 @@ fn dir_button<'a, Message: Clone + 'a>(
     .into()
 }
 
-/// Creates a small icon button for actions like delete or set main.
 fn icon_button<'a, Message: Clone + 'a>(
-    icon: svg::Handle,
+    icon: Text<'a>,
+    label: &'a str,
     on_press: Message,
 ) -> Element<'a, Message> {
-    button(svg(icon).width(18).height(18))
-        .height(HEIGHT)
-        .width(HEIGHT + INDENT)
-        .on_press(on_press)
+    let action = button(
+        icon.width(ICON_BUTTON_SIZE)
+            .height(ICON_BUTTON_SIZE)
+            .center(),
+    )
+    .width(ICON_BUTTON_SIZE)
+    .height(ICON_BUTTON_SIZE)
+    .clip(true)
+    .style(toolbar_button)
+    .on_press(on_press)
+    .padding(4);
+
+    tooltip(action, text(label), tooltip::Position::FollowCursor)
+        .gap(20)
+        .style(tooltip_box)
         .into()
 }

@@ -12,6 +12,7 @@ mod data;
 mod editor;
 mod file_manager;
 mod font;
+mod icon;
 mod screen;
 mod widgets;
 mod world;
@@ -43,6 +44,7 @@ fn main() -> iced::Result {
                 Cow::Borrowed(EDITOR_ITALIC_BYTES),
                 Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
                 Cow::Borrowed(EDITOR_BOLD_BYTES),
+                Cow::Borrowed(icon::ICON_FONT),
             ],
             default_font: Font::with_name(APP_FONT_FAMILY_NAME),
             ..Default::default()
