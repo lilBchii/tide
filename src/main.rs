@@ -174,7 +174,7 @@ impl Tide {
     /// Renders the current UI based on the active screen.
     ///
     /// Delegates rendering to either the editor or the welcome view.
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let screen = match &self.screen {
             Screen::Editing(editing) => editing.view().map(Message::Editor),
             Screen::Welcome(welcome) => welcome.view().map(Message::Welcome),

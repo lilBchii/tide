@@ -228,11 +228,11 @@ impl Editing {
         }
     }
 
-    /// Returns the main [`Element<Message>`] view for the editing screen.
+    /// Returns the main [`Element<'_, Message>`] view for the editing screen.
     ///
     /// Composes the file tree, text editor, preview (if available), status bar,
     /// and optional modals or pop-ups.
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         //let tool_bar = self.tool_bar.view().map(Message::ToolBar);
         let tool_bar =
             editing_toolbar(Some(self.typst.main().vpath())).map(Message::ToolBar);
@@ -989,7 +989,7 @@ impl AutocompletionContext {
 /// A wrapper around [`Completion`] that implements display and hashing,
 /// making it usable in a selection list.
 #[derive(Clone, Debug)]
-struct DisplayableCompletion {
+pub(crate) struct DisplayableCompletion {
     completion: Completion,
 }
 

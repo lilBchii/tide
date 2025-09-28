@@ -98,7 +98,7 @@ impl Welcome {
     }
 
     /// Renders the full welcome screen, including shortcuts, recent files, and modal if visible.
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let tool_bar = welcome_toolbar().map(Message::ToolBar);
 
         let title = row![

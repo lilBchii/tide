@@ -46,7 +46,7 @@ impl PopUpElement {
     /// Returns the Iced view representing the pop-up element.
     ///
     /// The view includes the title, details, and appropriate buttons depending on the pop-up type.
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let col = Column::new()
             .push(
                 text(self.title_text())

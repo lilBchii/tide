@@ -66,7 +66,7 @@ impl FileModal {
     ///
     /// Includes a text input for the file name, a warning label,
     /// and action buttons for creating or canceling.
-    pub fn view(&self) -> iced::Element<Message> {
+    pub fn view(&self) -> iced::Element<'_, Message> {
         let modal_content = container(
             column![
                 text("New File").size(20),
@@ -187,7 +187,7 @@ impl ProjectModal {
     ///
     /// Includes inputs for project name and path, a button to open a directory picker,
     /// and buttons to confirm or cancel the operation.
-    pub fn view(&self) -> iced::Element<Message> {
+    pub fn view(&self) -> iced::Element<'_, Message> {
         let modal_content = container(
             column![
                 text("New Project").size(20),
