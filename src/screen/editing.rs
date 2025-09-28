@@ -2,7 +2,6 @@ use super::component::{
     file_tree::{self, FileTree},
     modal, pop_up,
     preview::Preview,
-    status_bar::status_bar_view,
     toolbar::{self, editing_toolbar, open_url},
 };
 
@@ -36,8 +35,6 @@ use crate::{
     file_manager::export::svg::{export_svg, preview_svg},
     font::EDITOR_FONT_FAMILY_NAME,
 };
-use iced::widget::text_editor::Edit;
-use iced::widget::{button, center};
 use iced::Length::Fixed;
 use iced::{
     advanced::svg::Handle,
@@ -49,6 +46,11 @@ use iced::{
     Element, Font,
     Length::Fill,
     Shrink, Task,
+};
+use iced::{widget::text_editor::Edit, Length};
+use iced::{
+    widget::{button, center},
+    Alignment,
 };
 use iced_aw::style::selection_list::primary;
 use iced_aw::SelectionList;
@@ -320,7 +322,7 @@ impl Editing {
 
         //--------//
 
-        let status_bar = status_bar_view(
+        let status_bar = view_status_bar(
             cursor_pos,
             match self.current.file_id {
                 Some(id) => id.vpath().as_rootless_path().to_string_lossy().to_string(),
@@ -918,6 +920,32 @@ fn view_errors<'a>(errors: &EcoVec<SourceDiagnostic>) -> Element<'a, Message> {
     .padding(6)
     .width(Fill)
     .height(250)
+    .into()
+}
+
+/// Builds and returns the view for the status bar at the bottom of the editor.
+///
+/// The status bar displays:
+/// - the current cursor position as line and column numbers ;
+/// - the name of the currently opened file ;
+/// - a flag indicating whether the file has been saved.
+fn view_status_bar<'a>(
+    cursor_pos: (usize, usize),
+    current_file: String,
+    saved: bool,
+) -> Element<'a, Message> {
+    const SPACING: f32 = 20.0;
+
+    row![
+        horizontal_space().width(SPACING),
+        text(format! {"{}:{}", cursor_pos.0, cursor_pos.1}),
+        text(current_file),
+        horizontal_space().width(Length::Fill),
+        text(format! {"saved: {}", saved}),
+        horizontal_space().width(SPACING)
+    ]
+    .spacing(SPACING)
+    .align_y(Alignment::Center)
     .into()
 }
 
