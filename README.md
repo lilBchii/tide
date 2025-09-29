@@ -165,7 +165,9 @@ for a guide on how to contribute.
 
 <a id='License'></a>
 ## License
-...
+Tide is distributed under the terms of Mozilla Public License (Version 2.0).
+
+See [LICENSE](https://github.com/lilBchii/tide/blob/main/LICENSE) for details.
 
 <a id='Creators'></a>
 ## Creators
