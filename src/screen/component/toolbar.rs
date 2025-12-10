@@ -4,19 +4,18 @@ use crate::file_manager::export::errors::ExportError;
 use crate::file_manager::export::ExportType;
 use crate::file_manager::import::UploadType;
 use crate::icon;
-use iced::widget::{button, horizontal_space, row, text, tooltip, Text};
+use iced::widget::{button, row, space, text, tooltip, Button, Text};
 use iced::{alignment, Alignment, Element, Length, Theme};
-use iced_aw::menu::{Item, Menu};
-use iced_aw::{menu_bar, menu_items};
+use iced_aw::{menu::Menu, menu_bar, menu_items};
 use open::that;
 use std::{io::ErrorKind, path::PathBuf};
 use typst::syntax::VirtualPath;
 
-const ICON_BUTTON_SIZE: u16 = 24;
-const BUTTON_PADDING: u16 = 4;
-const TOOLBAR_PADDING: u16 = 2;
-const TOOLBAR_SPACING: u16 = 6;
-const MENU_BUTTON_SIZE: u16 = 50;
+const ICON_BUTTON_SIZE: f32 = 24.0;
+const BUTTON_PADDING: f32 = 4.0;
+const TOOLBAR_PADDING: f32 = 2.0;
+const TOOLBAR_SPACING: f32 = 6.0;
+const MENU_BUTTON_SIZE: f32 = 50.0;
 
 /// Messages used in the context of toolbar interactions.
 #[derive(Debug, Clone)]
@@ -74,31 +73,31 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         Menu::new(items)
             .max_width(300.0)
             .offset(TOOLBAR_SPACING as f32)
-            .spacing(TOOLBAR_SPACING * 2)
+            .spacing(TOOLBAR_SPACING * 2.0)
     };
 
     #[rustfmt::skip]
     let menu_bar = menu_bar!(
         (text_button("File", Message::DropDownMenu, MENU_BUTTON_SIZE), {
             menu_tpl_1(menu_items!(
-                (menu_button("New File",Message::NewFile))
-                (menu_button("Open File", Message::OpenFile))
-                (menu_button("New Project", Message::NewProject))
-                (menu_button("Open Project", Message::OpenProject(None, None)))
-                (menu_button("Upload File", Message::Upload(UploadType::All, None)))
-                (menu_button("Save", Message::SaveFile(true)))
-                (menu_button("Save as", Message::SaveFile(true)))
+                (menu_button("New File",Message::NewFile)),
+                (menu_button("Open File", Message::OpenFile)),
+                (menu_button("New Project", Message::NewProject)),
+                (menu_button("Open Project", Message::OpenProject(None, None))),
+                (menu_button("Upload File", Message::Upload(UploadType::All, None))),
+                (menu_button("Save", Message::SaveFile(true))),
+                (menu_button("Save as", Message::SaveFile(true))),
                 (menu_button("Export as", Message::DropDownMenu), menu_tpl_1(menu_items!(
-                    (menu_button("PDF", Message::Export(ExportType::PDF)))
-                    (menu_button("SVG", Message::Export(ExportType::SVG)))
-                    (menu_button("Template", Message::Export(ExportType::Template)))
-                )))
-                (menu_button("Add Local Template", Message::AddTemplate))
+                    (menu_button("PDF", Message::Export(ExportType::PDF))),
+                    (menu_button("SVG", Message::Export(ExportType::SVG))),
+                    (menu_button("Template", Message::Export(ExportType::Template))),
+                ))),
+                (menu_button("Add Local Template", Message::AddTemplate)),
                 (menu_button("Start from Template", Message::StartFromTemplate))
             )).width(240.0)
-        })
+        }),
         (text_button("View", Message::DropDownMenu, MENU_BUTTON_SIZE), menu_tpl_1(menu_items!(
-            (menu_button("Theme", Message::ChangeTheme))
+            (menu_button("Theme", Message::ChangeTheme)),
             (menu_button("Invert", Message::TogglePreview))
         )).width(240.0))
     );
@@ -131,19 +130,19 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
     // text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
 
     let r = row![
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
         menu_bar,
-        horizontal_space(),
+        space().width(Length::Fill),
         preview_button,
         main_file_path,
-        horizontal_space(),
+        space().width(Length::Fill),
         universe_button,
         help_button,
         export_button,
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
-    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2)
+    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)
     .spacing(TOOLBAR_SPACING);
     r.into()
 }
@@ -157,20 +156,20 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
         Menu::new(items)
             .max_width(300.0)
             .offset(TOOLBAR_SPACING as f32)
-            .spacing(TOOLBAR_SPACING * 2)
+            .spacing(TOOLBAR_SPACING * 2.0)
     };
 
     #[rustfmt::skip]
     let menu_bar = menu_bar!(
         (text_button("File", Message::DropDownMenu, MENU_BUTTON_SIZE), {
             menu_tpl_1(menu_items!(
-                (menu_button("New File",Message::NewFile))
-                (menu_button("Open File", Message::OpenFile))
-                (menu_button("New Project", Message::NewProject))
-                (menu_button("Open Project", Message::OpenProject(None, None)))
-                (menu_button("Start from Template", Message::StartFromTemplate))
+                (menu_button("New File",Message::NewFile)),
+                (menu_button("Open File", Message::OpenFile)),
+                (menu_button("New Project", Message::NewProject)),
+                (menu_button("Open Project", Message::OpenProject(None, None))),
+                (menu_button("Start from Template", Message::StartFromTemplate)),
             )).width(240.0)
-        })
+        }),
         (text_button("View", Message::DropDownMenu, MENU_BUTTON_SIZE), menu_tpl_1(menu_items!(
             (menu_button("Theme", Message::ChangeTheme))
         )).width(240.0))
@@ -182,16 +181,16 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
     let help_button = icon_button(icon::help(), "Help", Message::Help);
 
     let r = row![
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
         menu_bar,
-        horizontal_space(),
-        horizontal_space(),
+        space().width(Length::Fill),
+        space().width(Length::Fill),
         universe_button,
         help_button,
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
-    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2)
+    .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)
     .spacing(TOOLBAR_SPACING);
 
     r.into()
@@ -244,15 +243,14 @@ fn icon_button<'a, Message: Clone + 'a>(
 fn text_button<'a, Message: Clone + 'a>(
     label: &'a str,
     on_press: Message,
-    width: u16,
-) -> Element<'a, Message> {
+    width: f32,
+) -> Button<'a, Message> {
     button(text(label).width(20).center())
         .on_press(on_press)
         .padding(BUTTON_PADDING)
         .width(width)
         .height(ICON_BUTTON_SIZE)
         .style(toolbar_button)
-        .into()
 }
 
 /// Attempts to open a given URL or file `path` in the system's default handler.

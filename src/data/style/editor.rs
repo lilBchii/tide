@@ -19,7 +19,6 @@ pub fn editor_style(
             width: 1.0,
         },
         selection: palette.success.weak.color,
-        icon: palette.background.weak.text,
         placeholder: palette.background.strong.color,
         value: palette.background.base.text,
     };
@@ -32,7 +31,7 @@ pub fn editor_style(
             },
             ..active
         },
-        Status::Focused => Style {
+        Status::Focused { is_hovered: _ } => Style {
             border: Border {
                 color: palette.primary.strong.color,
                 ..active.border

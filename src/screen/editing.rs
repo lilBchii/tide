@@ -5,6 +5,7 @@ use super::component::{
     toolbar::{self, editing_toolbar, open_url},
 };
 
+use crate::file_manager::export::template::export_template;
 use crate::file_manager::file::{
     cache_project, get_templates_path, load_file_dialog, save_file_dialog,
     save_file_disk, ProjectCache,
@@ -12,7 +13,7 @@ use crate::file_manager::file::{
 use crate::file_manager::import::{UploadType, ALL_TYPES, TEMPLATE};
 use crate::screen::component::modal::{FileModal, ProjectModal};
 use crate::screen::component::pop_up::{PopUpElement, PopUpType};
-use crate::widgets::vsplit::VSplit;
+use crate::widgets::vsplit::Split;
 use crate::world::TideWorld;
 use crate::{
     data::config::appearance::EditorConfig, file_manager::file::load_repo_dialog,
@@ -21,10 +22,7 @@ use crate::{
     data::config::appearance::HighlighterTheme, file_manager::export::pdf::export_pdf,
 };
 use crate::{data::style::button::cancel_button, file_manager::export::ExportType};
-use crate::{
-    data::style::debug::debug_container_style,
-    file_manager::export::template::export_template,
-};
+use crate::{data::style::debug::debug_container_style, widgets::vsplit};
 use crate::{editor, file_manager::export::errors::ExportError};
 use crate::{
     editor::autocomplete::autocomplete, file_manager::file::delete_file_from_disk,
@@ -35,30 +33,22 @@ use crate::{
     file_manager::export::svg::{export_svg, preview_svg},
     font::EDITOR_FONT_FAMILY_NAME,
 };
-use iced::Length::Fixed;
 use iced::{
     advanced::svg::Handle,
     widget::{
-        column, container, horizontal_space, row, stack, svg, text,
-        text_editor::{Action, Binding, Motion},
+        button, column, container, row, space, stack, svg, text,
+        text_editor::{self, Action, Binding, Edit, Motion},
         Column, Scrollable, TextEditor,
     },
-    Element, Font,
-    Length::Fill,
-    Shrink, Task,
+    Alignment, Element, Font, Length, Task,
 };
-use iced::{widget::text_editor::Edit, Length};
-use iced::{
-    widget::{button, center},
-    Alignment,
-};
-use iced_aw::style::selection_list::primary;
-use iced_aw::SelectionList;
-use std::fmt::{Display, Formatter};
-use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
+use std::{
+    fmt::{Display, Formatter},
+    hash::{Hash, Hasher},
+};
 use typst::syntax::{FileId, VirtualPath};
 use typst::World;
 use typst::{
@@ -278,7 +268,7 @@ impl Editing {
                 }
             })
             .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
-            .height(Fill)
+            .height(Length::Fill)
             .highlight_with::<editor::highlighter::Highlighter>(
                 editor::highlighter::Settings {
                     theme: self.theme.clone(),
@@ -288,9 +278,9 @@ impl Editing {
             )
             .font(Font::with_name(EDITOR_FONT_FAMILY_NAME));
 
-        let cursor_pos = self.current.buffer.content.cursor_position();
+        let cursor_pos = self.current.buffer.content.cursor().position;
 
-        let (split_left, split_right) = self.split_at;
+        //let (split_left, split_right) = self.split_at;
         let (tree, _h) = self.file_tree.view();
 
         let file_tree = Scrollable::new(tree.map(Message::FileTree));
@@ -300,10 +290,11 @@ impl Editing {
             edit_col = edit_col.push(view_errors(debug));
         } //debug
 
-        let mut main_screen = VSplit::new(file_tree, edit_col)
-            .strategy(crate::widgets::vsplit::Strategy::Left)
-            .split_at(split_left)
-            .on_resize(Message::ResizeTree); //VSplit without preview
+        let mut main_screen =
+            Split::new(file_tree, edit_col, self.split_at.0, Message::ResizeTree)
+                .strategy(vsplit::Strategy::Start);
+        // .split_at(split_left)
+        // .on_resize(Message::ResizeTree); //VSplit without preview
 
         if let Some(svg_handles) = &self.preview.handle {
             let mut svg_pages = vec![];
@@ -312,12 +303,18 @@ impl Editing {
             }
             let preview =
                 Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
-                    .width(Fill)
-                    .height(Fill);
-            main_screen = VSplit::new(main_screen, preview)
-                .strategy(crate::widgets::vsplit::Strategy::Left)
-                .split_at(split_right)
-                .on_resize(Message::ResizePreview);
+                    .width(Length::Fill)
+                    .height(Length::Fill);
+            main_screen = Split::new(
+                main_screen,
+                preview,
+                self.split_at.1,
+                Message::ResizePreview,
+            )
+            .strategy(vsplit::Strategy::Start)
+            .direction(vsplit::Direction::Vertical);
+            // .split_at(split_right)
+            // .on_resize(Message::ResizePreview);
         } //VSplit with preview
 
         //--------//
@@ -333,22 +330,22 @@ impl Editing {
 
         let screen = column![tool_bar, main_screen, status_bar];
 
-        if let Some(completions) = &self.autocompletion_ctx.completions {
-            let selection = center(
-                SelectionList::new_with(
-                    completions,
-                    Message::ApplyAutocomplete,
-                    12.0,
-                    5.0,
-                    primary,
-                    None,
-                    Font::default(),
-                )
-                .width(Shrink)
-                .height(Fixed(100.0)),
-            );
-            return stack![screen, selection].into();
-        } //autocomplete
+        // if let Some(completions) = &self.autocompletion_ctx.completions {
+        //     let selection = center(
+        //         SelectionList::new_with(
+        //             completions,
+        //             Message::ApplyAutocomplete,
+        //             12.0,
+        //             5.0,
+        //             primary,
+        //             None,
+        //             Font::default(),
+        //         )
+        //         .width(Shrink)
+        //         .height(Fixed(100.0)),
+        //     );
+        //     return stack![screen, selection].into();
+        // } //autocomplete
 
         if let Some(pop_up) = &self.pop_up {
             return stack![screen, pop_up.view().map(Message::PopUp)].into();
@@ -441,10 +438,13 @@ impl Editing {
             Message::Autocomplete => {
                 if let Some(current_file_id) = self.current_file_id() {
                     self.update_source(current_file_id, self.current_buffer().clone());
-                    let (line, shift) = self.current_buffer().content.cursor_position();
+                    let cursor_position = self.current_buffer().content.cursor().position;
                     if let Ok(source) = self.typst.source(self.current_file_id().unwrap())
                     {
-                        let index = source.line_column_to_byte(line, shift);
+                        let index = source.line_column_to_byte(
+                            cursor_position.line,
+                            cursor_position.column,
+                        );
                         println!("{:?}", self.typst);
                         println!(
                             "autocompletion for {:?}/len:{}",
@@ -453,7 +453,7 @@ impl Editing {
                         );
                         println!(
                             "line: {} / shift: {} | index: {:?}",
-                            line, shift, index
+                            cursor_position.line, cursor_position.column, index
                         );
                         if let Some(cursor_index) = index {
                             let Some((pos, completions)) =
@@ -895,7 +895,7 @@ impl Editing {
 fn view_errors<'a>(errors: &EcoVec<SourceDiagnostic>) -> Element<'a, Message> {
     container(column![
         row![
-            horizontal_space(),
+            space().width(Length::Fill),
             button(text("X"))
                 .on_press(Message::HideErrors)
                 .style(cancel_button),
@@ -918,7 +918,7 @@ fn view_errors<'a>(errors: &EcoVec<SourceDiagnostic>) -> Element<'a, Message> {
     ])
     .style(debug_container_style)
     .padding(6)
-    .width(Fill)
+    .width(Length::Fill)
     .height(250)
     .into()
 }
@@ -930,19 +930,19 @@ fn view_errors<'a>(errors: &EcoVec<SourceDiagnostic>) -> Element<'a, Message> {
 /// - the name of the currently opened file ;
 /// - a flag indicating whether the file has been saved.
 fn view_status_bar<'a>(
-    cursor_pos: (usize, usize),
+    cursor_pos: text_editor::Position,
     current_file: String,
     saved: bool,
 ) -> Element<'a, Message> {
     const SPACING: f32 = 20.0;
 
     row![
-        horizontal_space().width(SPACING),
-        text(format! {"{}:{}", cursor_pos.0, cursor_pos.1}),
+        space().width(SPACING),
+        text(format! {"{}:{}", cursor_pos.line, cursor_pos.column}),
         text(current_file),
-        horizontal_space().width(Length::Fill),
+        space().width(Length::Fill),
         text(format! {"saved: {}", saved}),
-        horizontal_space().width(SPACING)
+        space().width(SPACING)
     ]
     .spacing(SPACING)
     .align_y(Alignment::Center)

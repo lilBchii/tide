@@ -20,7 +20,7 @@ mod world;
 use crate::file_manager::file::{get_config_path, load_repo_dialog};
 use crate::screen::component::toolbar;
 use crate::screen::welcome::Welcome;
-use data::config::appearance::Config;
+use data::config::appearance::{Config, GeneralConfig};
 use screen::{
     editing::{self, Editing},
     welcome::{self},
@@ -32,29 +32,15 @@ use screen::{
 /// Loads configuration from a TOML file and launches the application using `iced::application`.
 fn main() -> iced::Result {
     let config = Config::load(get_config_path());
-    iced::application("tide", Tide::update, Tide::view)
-        .settings(Settings {
-            default_text_size: config.general.font_size.into(),
-            fonts: vec![
-                Cow::Borrowed(APP_REG_BYTES),
-                Cow::Borrowed(APP_ITALIC_BYTES),
-                Cow::Borrowed(APP_SEMI_BOLD_BYTES),
-                Cow::Borrowed(APP_BOLD_BYTES),
-                Cow::Borrowed(EDITOR_REG_BYTES),
-                Cow::Borrowed(EDITOR_ITALIC_BYTES),
-                Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
-                Cow::Borrowed(EDITOR_BOLD_BYTES),
-                Cow::Borrowed(icon::ICON_FONT),
-            ],
-            default_font: Font::with_name(APP_FONT_FAMILY_NAME),
-            ..Default::default()
-        })
+    let settings = settings(&config.general);
+
+    iced::application(move || Tide::new(config.clone()), Tide::update, Tide::view)
+        .settings(settings)
         .theme(Tide::theme)
-        //.font(config.retrieve_font()) //todo: .default_font(Font::with_name())
         .resizable(true)
         .transparent(true)
         .scale_factor(Tide::scale_factor)
-        .run_with(move || Tide::new(config))
+        .run()
 }
 
 /// The main application structure for Tide.
@@ -66,13 +52,13 @@ struct Tide {
     /// The current theme used across the application UI.
     theme: Theme,
     /// The factor used to scale UI elements based on the display.
-    window_scale_factor: f64,
+    window_scale_factor: f32,
     /// The configuration settings loaded from a TOML file.
     config: Config,
 }
 
 impl Tide {
-    /// Constructs a new [`Tide`] instance with the provided configuration.
+    /// Constructs a new [`Tide`] instance.
     ///
     /// Initializes the welcome screen, theme, scale factor, and stores the config.
     fn new(config: Config) -> (Self, Task<Message>) {
@@ -94,7 +80,7 @@ impl Tide {
     //as this is still an opened issue,
     //the best choice is to leave scale factor at 1.0 by default and let the user change it in
     //the application configuration if winit is unable to find it
-    fn scale_factor(&self) -> f64 {
+    fn scale_factor(&self) -> f32 {
         self.window_scale_factor
     }
 
@@ -195,4 +181,23 @@ impl Tide {
 enum Message {
     Editor(editing::Message),
     Welcome(welcome::Message),
+}
+
+fn settings(config: &GeneralConfig) -> Settings {
+    Settings {
+        fonts: vec![
+            Cow::Borrowed(APP_REG_BYTES),
+            Cow::Borrowed(APP_ITALIC_BYTES),
+            Cow::Borrowed(APP_SEMI_BOLD_BYTES),
+            Cow::Borrowed(APP_BOLD_BYTES),
+            Cow::Borrowed(EDITOR_REG_BYTES),
+            Cow::Borrowed(EDITOR_ITALIC_BYTES),
+            Cow::Borrowed(EDITOR_SEMI_BOLD_BYTES),
+            Cow::Borrowed(EDITOR_BOLD_BYTES),
+            Cow::Borrowed(icon::ICON_FONT),
+        ],
+        default_font: Font::with_name(APP_FONT_FAMILY_NAME),
+        default_text_size: config.font_size.into(),
+        ..Default::default()
+    }
 }

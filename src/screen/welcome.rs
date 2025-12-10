@@ -6,7 +6,8 @@ use crate::file_manager::file::{
 use crate::file_manager::import::TEMPLATE;
 use crate::screen::component::modal;
 use crate::screen::component::modal::ProjectModal;
-use iced::widget::{button, horizontal_space, row, stack, svg, text, vertical_space};
+use iced::widget::{button, row, space, stack, svg, text};
+use iced::Length::Fill;
 use iced::{
     widget::{column, container},
     Alignment, Element, Length, Task,
@@ -14,14 +15,14 @@ use iced::{
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-const WELCOME_BUTTON_PADDING: u16 = 2;
-const WELCOME_BUTTON_HEIGHT: u16 = 50;
-const WELCOME_BUTTON_WIDTH: u16 = 200;
-const FILE_BUTTON_HEIGHT: u16 = 30;
-const H1_FONT_SIZE: u16 = 75;
-const H2_FONT_SIZE: u16 = 20;
-const SPACING: u16 = 35;
-const TITLE_SPACING: u16 = 15;
+const WELCOME_BUTTON_PADDING: f32 = 2.0;
+const WELCOME_BUTTON_HEIGHT: f32 = 50.0;
+const WELCOME_BUTTON_WIDTH: f32 = 200.0;
+const FILE_BUTTON_HEIGHT: f32 = 30.0;
+const H1_FONT_SIZE: f32 = 75.0;
+const H2_FONT_SIZE: f32 = 20.0;
+const SPACING: f32 = 35.0;
+const TITLE_SPACING: f32 = 15.0;
 
 pub static LOGO: LazyLock<svg::Handle> = LazyLock::new(|| {
     svg::Handle::from_memory(include_bytes!("../../assets/thierry_colored.svg"))
@@ -57,7 +58,8 @@ impl Welcome {
 
     /// Updates the welcome view based on incoming [`Message`]s.
     ///
-    /// Handles interactions such as starting a new project or responding to modal actions.
+    /// Handles interactions such as starting a new project or responding to modal
+    /// actions.
     pub fn update(
         &mut self,
         message: Message,
@@ -109,25 +111,25 @@ impl Welcome {
 
         let getting_started = container(column![
             text("Getting started").size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
             welcome_button(
                 "New Project",
                 Message::ToolBar(toolbar::Message::NewProject),
             ),
-            vertical_space().height(10),
+            space().height(10),
             welcome_button(
                 "Start from template",
                 Message::ToolBar(toolbar::Message::StartFromTemplate),
             ),
-            vertical_space().height(10),
+            space().height(10),
             text("More options in “File” button of the tool bar.")
         ]);
 
         let shortcuts = container(column![
             text("Shortcuts").size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
             row![
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 column![
                     text("Open File"),
                     text("New Project"),
@@ -138,7 +140,7 @@ impl Welcome {
                     text("Select All"),
                 ]
                 .align_x(Alignment::End),
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 column![
                     text("Ctrl+O"),
                     text("Ctrl+N"),
@@ -154,7 +156,7 @@ impl Welcome {
 
         let mut recent = column![
             text("Recent Projects").size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
         ];
         for project in self.recent_files.iter() {
             let dir = project.root_path.to_owned();
@@ -171,14 +173,14 @@ impl Welcome {
             }
         }
         let recent_container = container(recent)
-            .height(5 * FILE_BUTTON_HEIGHT)
+            .height(5.0 * FILE_BUTTON_HEIGHT)
             .width(Length::Shrink);
 
         let r = row![
             getting_started,
-            horizontal_space(),
+            space().width(Fill),
             shortcuts,
-            horizontal_space()
+            space().width(Fill)
         ];
         let c = container(
             column![title, r, recent_container]

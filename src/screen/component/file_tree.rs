@@ -11,8 +11,8 @@ use crate::{
 use iced::{
     padding,
     widget::{
-        button, column, container, horizontal_space, mouse_area, row, text,
-        text::Wrapping, tooltip, vertical_rule, Text,
+        button, column, container, mouse_area, row, rule, space, text, text::Wrapping,
+        tooltip, Text,
     },
     Alignment, Element, Length,
 };
@@ -20,7 +20,7 @@ use iced::{
 const HEIGHT: f32 = 20.0;
 const INDENT: f32 = 10.0;
 const SPACING: f32 = 5.0;
-const ICON_BUTTON_SIZE: u16 = 24;
+const ICON_BUTTON_SIZE: f32 = 24.0;
 
 /// Represents messages triggered by user interactions with the file tree.
 #[derive(Clone, Debug)]
@@ -255,13 +255,13 @@ impl Dir {
                 );
 
             col = col.push(row![
-                horizontal_space().width(INDENT),
-                column![vertical_rule(1.0)]
+                space().width(INDENT),
+                column![rule::vertical(1.0)]
                     .padding(padding::top(HEIGHT * 0.5 - 1.5).bottom(HEIGHT * 0.5 - 1.5))
                     .align_x(Alignment::Center)
                     .width(Length::Shrink)
                     .height(height),
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 ch
             ]);
         }
@@ -458,7 +458,7 @@ fn dir_button<'a, Message: Clone + 'a>(
 ) -> Element<'a, Message> {
     mouse_area(
         row![
-            horizontal_space().width(10),
+            space().width(10),
             if is_open {
                 icon::open_dir()
             } else {

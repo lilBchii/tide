@@ -1,112 +1,108 @@
+// This widget is a modification of the `Split` widget from [`iced_split`]
+//
+// [`iced_split`]: https://github.com/edwloef/iced_split
+//
+// Copyright 2025 edwloef
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 use iced::{
     advanced::{
         layout::{Limits, Node},
+        mouse::{self, Cursor, Interaction},
         overlay,
-        renderer::Style,
+        renderer::{self, Quad},
         widget::{tree, Operation, Tree},
         Clipboard, Layout, Shell, Widget,
     },
-    event::Status,
-    mouse::{self, Cursor, Interaction},
-    widget::{rule, Rule},
-    window::RedrawRequest,
-    Element, Event, Length, Pixels, Point, Rectangle, Renderer, Size, Theme, Vector,
+    border::{self, Radius},
+    widget::rule::FillMode,
+    Color, Pixels, Theme,
 };
-use std::fmt::{Debug, Formatter};
+use iced::{Element, Event, Length, Point, Rectangle, Size, Vector};
 
-/// Layout strategies for the [`VSplit`] widget.
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Strategy {
-    /// Position is a relative ratio (0.0 to 1.0) of the container width.
     #[default]
     Relative,
-    /// Position is an absolute distance from the left edge.
-    Left,
-    /// Position is an absolute distance from the right edge.
-    Right,
+    Start,
+    End,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub enum Direction {
+    Horizontal,
+    #[default]
+    Vertical,
 }
 
 #[derive(Default)]
 struct State {
-    dragging: bool,
     hovering: bool,
+    dragging: bool,
 }
 
-/// A custom vertical split widget that divides the screen into two resizable panels.
-///
-/// `VSplit` displays two child widgets side by side with a draggable vertical separator ([`Rule`])
-/// between them, allowing users to adjust the width ratio interactively.
-///
-/// # Example
-/// ```rust
-/// let split = VSplit::new(left_view, right_view)
-///     .split_at(0.3)
-///     .strategy(Strategy::Relative)
-///     .on_resize(Message::SplitMoved);
-/// ```
-///
-/// # Features
-/// - Three layout strategies: [`Strategy::Relative`], [`Strategy::Left`], [`Strategy::Right`]
-/// - Draggable vertical [`Rule`] as a divider
-/// - Emits a message on resize
-///
-/// # Layout Strategies
-/// - `Relative`: `split_at` is a normalized ratio `[0.0, 1.0]`
-/// - `Left`: `split_at` is an absolute pixel offset from the left
-/// - `Right`: `split_at` is an absolute offset from the right edge
-pub struct VSplit<'a, Message> {
-    children: [Element<'a, Message>; 3],
+#[expect(missing_debug_implementations, clippy::struct_field_names)]
+pub struct Split<'a, Message, Theme, Renderer>
+where
+    Theme: Catalog,
+{
+    children: [Element<'a, Message, Theme, Renderer>; 2],
     split_at: f32,
     strategy: Strategy,
-    rule_width: f32,
-    on_resize: Option<fn(f32) -> Message>,
+    direction: Direction,
+    thickness: f32,
+    class: Theme::Class<'a>,
+    f: Box<dyn Fn(f32) -> Message + 'a>,
 }
 
-impl<Message> Debug for VSplit<'_, Message> {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        f.debug_struct("VSplit")
-            .field("split_at", &self.split_at)
-            .field("strategy", &self.strategy)
-            .field("rule_width", &self.rule_width)
-            .finish_non_exhaustive()
-    }
-}
-
-impl<'a, Message> VSplit<'a, Message>
+impl<'a, Message, Theme, Renderer> Split<'a, Message, Theme, Renderer>
 where
-    Message: 'a,
+    Theme: Catalog,
 {
-    /// Creates a new [`VSplit`] with two child widgets (left and right).
-    ///
-    /// The default `split_at` is `0.5`, with strategy [`Strategy::Relative`].
+    #[must_use]
     pub fn new(
-        left: impl Into<Element<'a, Message>>,
-        right: impl Into<Element<'a, Message>>,
+        start: impl Into<Element<'a, Message, Theme, Renderer>>,
+        end: impl Into<Element<'a, Message, Theme, Renderer>>,
+        split_at: f32,
+        f: impl Fn(f32) -> Message + 'a,
     ) -> Self {
         Self {
-            children: [left.into(), Rule::vertical(11.0).into(), right.into()],
-            split_at: 0.5,
+            children: [start.into(), end.into()],
+            split_at,
             strategy: Strategy::default(),
-            rule_width: 11.0,
-            on_resize: None,
+            direction: Direction::default(),
+            thickness: 11.0,
+            class: Theme::default(),
+            f: Box::from(f),
         }
     }
 
-    /// Sets the position of the split:
-    /// - If `strategy` is `Relative`, `split_at` should be in `[0.0, 1.0]`
-    /// - If `Left` or `Right`, it's interpreted in absolute pixels
-    pub fn split_at(
+    #[must_use]
+    pub fn direction(
         mut self,
-        split_at: f32,
+        direction: Direction,
     ) -> Self {
-        self.split_at = split_at;
+        self.direction = direction;
         self
     }
 
-    /// Defines the layout strategy (see [`Strategy`]).
+    #[must_use]
     pub fn strategy(
         mut self,
         strategy: Strategy,
@@ -115,112 +111,49 @@ where
         self
     }
 
-    /// Sets the thickness of the split rule, in pixels.
-    pub fn rule_width(
+    #[must_use]
+    pub fn thickness(
         mut self,
-        rule_width: impl Into<Pixels>,
+        thickness: f32,
     ) -> Self {
-        self.rule_width = rule_width.into().0;
-        self.children[1] = Rule::vertical(self.rule_width).into();
+        self.thickness = thickness;
         self
     }
 
-    /// Registers a callback message when the split position is updated via drag.
-    pub fn on_resize(
-        mut self,
-        on_resize: fn(f32) -> Message,
-    ) -> Self {
-        self.on_resize = Some(on_resize);
-        self
-    }
-
-    /// Allows customizing the rule’s style using a closure with access to the theme.
+    #[must_use]
     pub fn style(
         mut self,
-        style: impl Fn(&Theme) -> rule::Style + 'a,
+        style: impl Fn(&Theme) -> Style + 'a,
+    ) -> Self
+    where
+        Theme::Class<'a>: From<StyleFn<'a, Theme>>,
+    {
+        self.class = (Box::new(style) as StyleFn<'a, Theme>).into();
+        self
+    }
+
+    #[must_use]
+    pub fn class(
+        mut self,
+        class: impl Into<Theme::Class<'a>>,
     ) -> Self {
-        self.children[1] = Rule::vertical(self.rule_width).style(style).into();
+        self.class = class.into();
         self
     }
 }
 
-/// Implements the full [Widget] trait:
-/// dragging logic is handled in `on_event()`, where the resize callback is triggered
-/// on cursor move while dragging.
-impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
+impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+    for Split<'_, Message, Theme, Renderer>
+where
+    Theme: Catalog,
+    Renderer: iced::advanced::Renderer,
+{
+    fn children(&self) -> Vec<Tree> {
+        self.children.iter().map(Tree::new).collect()
+    }
+
     fn size(&self) -> Size<Length> {
         Size::new(Length::Fill, Length::Fill)
-    }
-
-    fn layout(
-        &self,
-        tree: &mut Tree,
-        renderer: &Renderer,
-        limits: &Limits,
-    ) -> Node {
-        let max_limits = limits.max();
-
-        let left_width = match self.strategy {
-            Strategy::Relative => max_limits
-                .width
-                .mul_add(self.split_at, -self.rule_width / 2.0)
-                .floor(),
-            Strategy::Left => self.split_at,
-            Strategy::Right => max_limits.width - self.split_at - self.rule_width,
-        }
-        .min(max_limits.width)
-        .max(0.0);
-
-        let left_limits = Limits::new(
-            Size::new(0.0, 0.0),
-            Size::new(left_width, max_limits.height),
-        );
-
-        let right_width = max_limits.width - left_width - self.rule_width;
-        let right_limits = Limits::new(
-            Size::new(0.0, 0.0),
-            Size::new(right_width, max_limits.height),
-        );
-
-        let children = vec![
-            self.children[0].as_widget().layout(
-                &mut tree.children[0],
-                renderer,
-                &left_limits,
-            ),
-            self.children[1]
-                .as_widget()
-                .layout(&mut tree.children[1], renderer, limits)
-                .translate(Vector::new(left_width, 0.0)),
-            self.children[2]
-                .as_widget()
-                .layout(&mut tree.children[2], renderer, &right_limits)
-                .translate(Vector::new(left_width + self.rule_width, 0.0)),
-        ];
-
-        Node::with_children(max_limits, children)
-    }
-
-    fn draw(
-        &self,
-        tree: &Tree,
-        renderer: &mut Renderer,
-        theme: &Theme,
-        style: &Style,
-        layout: Layout<'_>,
-        cursor: Cursor,
-        viewport: &Rectangle,
-    ) {
-        self.children
-            .iter()
-            .zip(&tree.children)
-            .zip(layout.children())
-            .filter(|(_, layout)| layout.bounds().intersects(viewport))
-            .for_each(|((child, tree), layout)| {
-                child
-                    .as_widget()
-                    .draw(tree, renderer, theme, style, layout, cursor, viewport);
-            });
     }
 
     fn tag(&self) -> tree::Tag {
@@ -231,10 +164,6 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
         tree::State::new(State::default())
     }
 
-    fn children(&self) -> Vec<Tree> {
-        self.children.iter().map(Tree::new).collect()
-    }
-
     fn diff(
         &self,
         tree: &mut Tree,
@@ -242,102 +171,233 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
         tree.diff_children(&self.children);
     }
 
-    fn operate(
-        &self,
-        tree: &mut Tree,
-        layout: Layout<'_>,
-        renderer: &Renderer,
-        operation: &mut dyn Operation,
-    ) {
-        operation.container(None, layout.bounds(), &mut |operation| {
-            self.children
-                .iter()
-                .zip(&mut tree.children)
-                .zip(layout.children())
-                .for_each(|((child, state), layout)| {
-                    child
-                        .as_widget()
-                        .operate(state, layout, renderer, operation);
-                });
-        });
-    }
-
-    fn on_event(
+    fn layout(
         &mut self,
         tree: &mut Tree,
-        event: Event,
+        renderer: &Renderer,
+        limits: &Limits,
+    ) -> Node {
+        let max_limits = limits.max();
+
+        let (cross_direction, layout_direction) = match self.direction {
+            Direction::Horizontal => (max_limits.width, max_limits.height),
+            Direction::Vertical => (max_limits.height, max_limits.width),
+        };
+
+        let start_layout = match self.strategy {
+            Strategy::Relative => {
+                layout_direction.mul_add(self.split_at, -self.thickness / 2.0)
+            }
+            Strategy::Start => self.split_at,
+            Strategy::End => layout_direction - self.split_at - self.thickness,
+        }
+        .min(layout_direction - self.thickness)
+        .max(0.0);
+        let (start_width, start_height) = match self.direction {
+            Direction::Horizontal => (cross_direction, start_layout),
+            Direction::Vertical => (start_layout, cross_direction),
+        };
+        let start_limits =
+            Limits::new(Size::new(0.0, 0.0), Size::new(start_width, start_height));
+
+        let end_layout = layout_direction - start_layout - self.thickness;
+        let (end_width, end_height) = match self.direction {
+            Direction::Horizontal => (cross_direction, end_layout),
+            Direction::Vertical => (end_layout, cross_direction),
+        };
+        let end_limits =
+            Limits::new(Size::new(0.0, 0.0), Size::new(end_width, end_height));
+
+        let (offset_width, offset_height) = match self.direction {
+            Direction::Horizontal => (0.0, start_layout + self.thickness),
+            Direction::Vertical => (start_layout + self.thickness, 0.0),
+        };
+
+        let children = vec![
+            self.children[0].as_widget_mut().layout(
+                &mut tree.children[0],
+                renderer,
+                &start_limits,
+            ),
+            self.children[1]
+                .as_widget_mut()
+                .layout(&mut tree.children[1], renderer, &end_limits)
+                .translate(Vector::new(offset_width, offset_height)),
+        ];
+
+        Node::with_children(max_limits, children)
+    }
+
+    fn update(
+        &mut self,
+        tree: &mut Tree,
+        event: &Event,
         layout: Layout<'_>,
         cursor: Cursor,
         renderer: &Renderer,
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
-    ) -> Status {
-        let mut event_status = Status::Ignored;
+    ) {
+        self.children
+            .iter_mut()
+            .zip(&mut tree.children)
+            .zip(layout.children())
+            .for_each(|((child, tree), layout)| {
+                child.as_widget_mut().update(
+                    tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+                );
+            });
+
+        if shell.is_event_captured() {
+            return;
+        }
 
         let state = tree.state.downcast_mut::<State>();
         let bounds = layout.bounds();
 
         if let Event::Mouse(event) = event {
             match event {
-                mouse::Event::ButtonPressed(mouse::Button::Left)
-                    if cursor.is_over(layout.children().nth(1).unwrap().bounds()) =>
-                {
+                mouse::Event::ButtonPressed(mouse::Button::Left) if state.hovering => {
                     state.dragging = true;
-                    event_status = Status::Captured;
+                    shell.capture_event();
                 }
                 mouse::Event::CursorMoved {
-                    position: Point { x, .. },
+                    position: Point { x, y },
                     ..
                 } => {
+                    let (cross_direction, layout_direction) = match self.direction {
+                        Direction::Horizontal => (bounds.width, bounds.height),
+                        Direction::Vertical => (bounds.height, bounds.width),
+                    };
+
                     if state.dragging {
-                        if let Some(on_resize) = self.on_resize {
-                            let relative_pos = (x - bounds.x - self.rule_width / 2.0)
-                                .clamp(0.0, bounds.width);
-                            let split_at = match self.strategy {
-                                Strategy::Relative => relative_pos / bounds.width,
-                                Strategy::Left => relative_pos,
-                                Strategy::Right => {
-                                    bounds.width - relative_pos - self.rule_width
-                                }
-                            };
-                            shell.publish(on_resize(split_at));
-                            event_status = Status::Captured;
-                        }
-                    } else if state.hovering
-                        != cursor.is_over(layout.children().nth(1).unwrap().bounds())
-                    {
-                        state.hovering ^= true;
-                        shell.request_redraw(RedrawRequest::NextFrame);
+                        let relative_position = match self.direction {
+                            Direction::Horizontal => y - bounds.y,
+                            Direction::Vertical => x - bounds.x,
+                        } - self.thickness / 2.0;
+
+                        let split_at = match self.strategy {
+                            Strategy::Relative => {
+                                (relative_position + self.thickness / 2.0)
+                                    / layout_direction
+                            }
+                            Strategy::Start => relative_position,
+                            Strategy::End => {
+                                layout_direction - relative_position - self.thickness
+                            }
+                        };
+
+                        shell.publish((self.f)(split_at));
+                        shell.capture_event();
                     }
+
+                    let layout = match self.strategy {
+                        Strategy::Relative => {
+                            layout_direction.mul_add(self.split_at, -self.thickness / 2.0)
+                        }
+                        Strategy::Start => self.split_at,
+                        Strategy::End => {
+                            layout_direction - self.split_at - self.thickness
+                        }
+                    }
+                    .min(layout_direction - self.thickness)
+                    .max(0.0);
+
+                    let (x, y, width, height) = match self.direction {
+                        Direction::Horizontal => {
+                            (0.0, layout, cross_direction, self.thickness)
+                        }
+                        Direction::Vertical => {
+                            (layout, 0.0, self.thickness, cross_direction)
+                        }
+                    };
+
+                    let bounds = Rectangle {
+                        x,
+                        y,
+                        width,
+                        height,
+                    } + Vector::new(bounds.x, bounds.y);
+
+                    state.hovering = cursor.is_over(bounds);
                 }
                 mouse::Event::ButtonReleased(mouse::Button::Left) if state.dragging => {
                     state.dragging = false;
-                    event_status = Status::Captured;
+                    shell.capture_event();
                 }
                 _ => {}
             }
         }
-        let child_status = self
-            .children
-            .iter_mut()
-            .zip(&mut tree.children)
-            .zip(layout.children())
-            .map(|((child, state), layout)| {
-                child.as_widget_mut().on_event(
-                    state,
-                    event.clone(),
-                    layout,
-                    cursor,
-                    renderer,
-                    clipboard,
-                    shell,
-                    viewport,
-                )
-            })
-            .fold(Status::Ignored, Status::merge);
+    }
 
-        Status::merge(event_status, child_status)
+    fn draw(
+        &self,
+        tree: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        style: &renderer::Style,
+        layout: Layout<'_>,
+        cursor: Cursor,
+        viewport: &Rectangle,
+    ) {
+        self.children
+            .iter()
+            .zip(&tree.children)
+            .zip(layout.children())
+            .for_each(|((child, tree), layout)| {
+                child
+                    .as_widget()
+                    .draw(tree, renderer, theme, style, layout, cursor, viewport);
+            });
+
+        let bounds = layout.bounds();
+        let style = theme.style(&self.class);
+
+        let (cross_direction, layout_direction) = match self.direction {
+            Direction::Horizontal => (bounds.width, bounds.height),
+            Direction::Vertical => (bounds.height, bounds.width),
+        };
+
+        let layout = match self.strategy {
+            Strategy::Relative => {
+                layout_direction.mul_add(self.split_at, -self.thickness / 2.0)
+            }
+            Strategy::Start => self.split_at,
+            Strategy::End => layout_direction - self.split_at - self.thickness,
+        }
+        .min(layout_direction - self.thickness)
+        .max(0.0)
+            + self.thickness / 2.0;
+
+        let width = f32::from(style.width);
+        let (offset, length) = style.fill_mode.fill(cross_direction);
+
+        let (x, y, width, height) = match self.direction {
+            Direction::Horizontal => {
+                (0.0, width.mul_add(-0.5, layout + offset), length, width)
+            }
+            Direction::Vertical => {
+                (width.mul_add(-0.5, layout + offset), 0.0, width, length)
+            }
+        };
+
+        let bounds = Rectangle {
+            x,
+            y,
+            width,
+            height,
+        } + Vector::new(bounds.x, bounds.y);
+
+        renderer.fill_quad(
+            Quad {
+                bounds,
+                border: border::rounded(style.radius),
+                snap: style.snap,
+                ..Quad::default()
+            },
+            style.color,
+        );
     }
 
     fn mouse_interaction(
@@ -350,43 +410,134 @@ impl<Message> Widget<Message, Theme, Renderer> for VSplit<'_, Message> {
     ) -> Interaction {
         let state = tree.state.downcast_ref::<State>();
 
-        let interaction = self
-            .children
-            .iter()
-            .zip(&tree.children)
-            .zip(layout.children())
-            .map(|((child, tree), layout)| {
-                child
-                    .as_widget()
-                    .mouse_interaction(tree, layout, cursor, viewport, renderer)
-            })
-            .max()
-            .unwrap_or_default();
-
-        if interaction == Interaction::default() && (state.dragging || state.hovering) {
-            Interaction::ResizingHorizontally
+        if state.hovering || state.dragging {
+            match self.direction {
+                Direction::Horizontal => Interaction::ResizingVertically,
+                Direction::Vertical => Interaction::ResizingHorizontally,
+            }
         } else {
-            interaction
+            self.children
+                .iter()
+                .zip(&tree.children)
+                .zip(layout.children())
+                .map(|((child, tree), layout)| {
+                    child
+                        .as_widget()
+                        .mouse_interaction(tree, layout, cursor, viewport, renderer)
+                })
+                .max()
+                .unwrap_or_default()
         }
     }
 
     fn overlay<'a>(
         &'a mut self,
         tree: &'a mut Tree,
-        layout: Layout<'_>,
+        layout: Layout<'a>,
         renderer: &Renderer,
+        viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'a, Message, Theme, Renderer>> {
-        overlay::from_children(&mut self.children, tree, layout, renderer, translation)
+        overlay::from_children(
+            &mut self.children,
+            tree,
+            layout,
+            renderer,
+            viewport,
+            translation,
+        )
+    }
+
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
+        operation.container(None, layout.bounds());
+        operation.traverse(&mut |operation| {
+            self.children
+                .iter_mut()
+                .zip(&mut tree.children)
+                .zip(layout.children())
+                .for_each(|((child, state), layout)| {
+                    child
+                        .as_widget_mut()
+                        .operate(state, layout, renderer, operation);
+                });
+        });
     }
 }
 
-/// Allows [`VSplit`] to be used directly as an [`Element`].
-impl<'a, Message> From<VSplit<'a, Message>> for Element<'a, Message>
+impl<'a, Message, Theme, Renderer> From<Split<'a, Message, Theme, Renderer>>
+    for Element<'a, Message, Theme, Renderer>
 where
     Message: 'a,
+    Theme: Catalog + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
 {
-    fn from(value: VSplit<'a, Message>) -> Self {
+    fn from(value: Split<'a, Message, Theme, Renderer>) -> Self {
         Self::new(value)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Style {
+    color: Color,
+    width: Pixels,
+    radius: Radius,
+    snap: bool,
+    fill_mode: FillMode,
+}
+
+/// The theme catalog of a [`Container`].
+pub trait Catalog {
+    /// The item class of the [`Catalog`].
+    type Class<'a>;
+
+    /// The default class produced by the [`Catalog`].
+    fn default<'a>() -> Self::Class<'a>;
+
+    /// The [`Style`] of a class with the given status.
+    fn style(
+        &self,
+        class: &Self::Class<'_>,
+    ) -> Style;
+}
+
+/// A styling function for a [`Container`].
+pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
+
+impl<Theme> From<Style> for StyleFn<'_, Theme> {
+    fn from(style: Style) -> Self {
+        Box::new(move |_theme| style)
+    }
+}
+
+impl Catalog for Theme {
+    type Class<'a> = StyleFn<'a, Self>;
+
+    fn default<'a>() -> Self::Class<'a> {
+        Box::new(default)
+    }
+
+    fn style(
+        &self,
+        class: &Self::Class<'_>,
+    ) -> Style {
+        class(self)
+    }
+}
+
+pub fn default(theme: &Theme) -> Style {
+    let palette = theme.extended_palette();
+
+    Style {
+        color: palette.background.strong.color,
+        width: Pixels(5.0),
+        radius: 0.0.into(),
+        snap: true,
+        fill_mode: FillMode::Full,
     }
 }

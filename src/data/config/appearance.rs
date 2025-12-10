@@ -12,7 +12,7 @@ const DEFAULT_AUTO_PAIRS: [(char, char); 4] =
 /// Root configuration structure loaded from a TOML file.
 ///
 /// Contains grouped settings for general application behavior, color themes, and editor preferences.
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct Config {
     /// General application settings (font path, scale factor, etc.).
     pub general: GeneralConfig,
@@ -23,13 +23,13 @@ pub struct Config {
 }
 
 /// Configuration for general application behavior.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "kebab-case", default = "GeneralConfig::default")]
 pub struct GeneralConfig {
     /// Default font size for UI elements.
-    pub font_size: u16,
+    pub font_size: f32,
     /// Scale factor for high-DPI displays.
-    pub window_scale_factor: f64,
+    pub window_scale_factor: f32,
 }
 
 /// Configuration specific to the text editor component.
@@ -45,8 +45,8 @@ pub struct EditorConfig {
 }
 
 /// Configuration for UI theme colors.
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Deserialize, Debug, Clone)]
+#[serde(default, rename_all = "kebab-case")]
 pub struct ColorsConfig {
     /// Background color of the UI.
     #[serde(with = "color_serde")]
@@ -60,6 +60,9 @@ pub struct ColorsConfig {
     /// Color used to indicate success states.
     #[serde(with = "color_serde")]
     pub success: Color,
+    /// Color used to indicate warning states.
+    #[serde(with = "color_serde")]
+    pub warning: Color,
     /// Color used to indicate error or danger states.
     #[serde(with = "color_serde")]
     pub danger: Color,
@@ -171,7 +174,7 @@ impl Default for GeneralConfig {
     /// Returns default general configuration settings.
     fn default() -> Self {
         Self {
-            font_size: 14,
+            font_size: 14.0,
             window_scale_factor: 1.0,
         }
     }
@@ -196,6 +199,7 @@ impl Default for ColorsConfig {
             text: Color::from_rgb(0.04, 0.04, 0.04),
             primary: Color::from_rgb(0.137, 0.612, 0.678),
             success: Color::from_rgb(0.7, 0.7, 0.7),
+            warning: Color::from_rgb8(230, 10, 100),
             danger: Color::from_rgb(0.86, 0.08, 0.16),
         }
     }
@@ -211,6 +215,7 @@ impl From<&ColorsConfig> for Theme {
                 text: value.text,
                 primary: value.primary,
                 success: value.success,
+                warning: value.warning,
                 danger: value.danger,
             },
         )

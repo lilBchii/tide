@@ -3,15 +3,17 @@ use crate::data::style::modal;
 use crate::data::style::modal::modal_text_style;
 use crate::screen::component::toolbar;
 use crate::screen::editing;
-use iced::widget::{button, center, column, horizontal_space, row, text, text_input};
-use iced::widget::{container, opaque, vertical_space};
+use iced::advanced::text::Shaping;
+use iced::widget::{button, center, column, row, space, text, text_input};
+use iced::widget::{container, opaque};
 use iced::{Alignment, Color, Task};
 use std::io;
 use std::io::Result;
 use std::path::PathBuf;
 
-const MODAL_BUTTON_HEIGHT: u16 = 30;
-const MODAL_BUTTON_WIDTH: u16 = 80;
+const MODAL_BUTTON_HEIGHT: f32 = 30.0;
+const MODAL_BUTTON_WIDTH: f32 = 80.0;
+
 #[derive(Debug, Clone)]
 pub enum Message {
     /// Triggered when the user requests to create a file.
@@ -70,20 +72,20 @@ impl FileModal {
         let modal_content = container(
             column![
                 text("New File").size(20),
-                vertical_space().height(10),
+                space().height(10),
                 row![text_input("Enter file name", &self.file_name)
                     .on_input(Message::FileNamed)],
                 text(self.warning_text.clone())
                     .size(15)
                     .color(Color::from_rgb(1.0, 0.0, 0.0)),
-                vertical_space().height(10),
+                space().height(10),
                 row![
                     button(text("Create").center())
                         .on_press(Message::FileCreate)
                         .height(MODAL_BUTTON_HEIGHT)
                         .width(MODAL_BUTTON_WIDTH)
                         .style(validate_button),
-                    horizontal_space().width(10),
+                    space().width(10),
                     button(text("Cancel").center())
                         .on_press(Message::Cancel)
                         .height(MODAL_BUTTON_HEIGHT)
@@ -191,10 +193,10 @@ impl ProjectModal {
         let modal_content = container(
             column![
                 text("New Project").size(20),
-                vertical_space().height(10),
+                space().height(10),
                 text_input("Enter project name", &self.project_name)
                     .on_input(Message::ProjectName),
-                vertical_space().height(20),
+                space().height(20),
                 row![
                     text_input("Enter project absolute path", &self.project_path)
                         .on_input(Message::ProjectPath),
@@ -204,15 +206,16 @@ impl ProjectModal {
                 ],
                 text(self.warning_text.clone())
                     .size(15)
-                    .style(modal_text_style),
-                vertical_space().height(10),
+                    .style(modal_text_style)
+                    .shaping(Shaping::Advanced),
+                space().height(10),
                 row![
                     button(text("Create").center())
                         .on_press(Message::ProjectCreate)
                         .height(MODAL_BUTTON_HEIGHT)
                         .width(MODAL_BUTTON_WIDTH)
                         .style(validate_button),
-                    horizontal_space().width(10),
+                    space().width(10),
                     button(text("Cancel").center())
                         .on_press(Message::Cancel)
                         .height(MODAL_BUTTON_HEIGHT)

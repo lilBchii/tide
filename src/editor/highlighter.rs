@@ -4,8 +4,8 @@ use crate::{
     data::config::appearance::HighlighterTheme,
     font::{FONT_BOLD, FONT_ITALIC, FONT_SEMI_BOLD},
 };
+use iced::advanced::text::highlighter::{self, Format};
 use iced::{Color, Font};
-use iced_core::text::highlighter::{self, Format};
 
 pub struct Highlighter {
     settings: Settings,
