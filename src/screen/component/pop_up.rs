@@ -2,9 +2,7 @@ use iced::font::Weight::Bold;
 
 use iced::advanced::text::Shaping;
 use iced::advanced::widget::Text;
-use iced::widget::{
-    button, center, container, horizontal_space, opaque, row, text, Column, Row,
-};
+use iced::widget::{button, center, container, opaque, row, space, text, Column, Row};
 use iced::{Element, Font, Length};
 use typst::syntax::FileId;
 
@@ -65,7 +63,7 @@ impl PopUpElement {
         let row = match self.pop_type {
             PopUpType::Confirm(id) => button_row(Message::DeleteFile(id)),
             _ => Row::new()
-                .push(horizontal_space().width(500))
+                .push(space().width(500))
                 .push(
                     button(Text::new("Ok").shaping(Shaping::Advanced))
                         .on_press(Message::HidePopUp)
@@ -130,11 +128,11 @@ pub enum Message {
 /// `on_press` is the message that will be sent when "Ok" is pressed.
 fn button_row<'a>(on_press: Message) -> Row<'a, Message> {
     row![
-        horizontal_space().width(500),
+        space().width(500),
         button(Text::new("Cancel").shaping(Shaping::Advanced))
             .on_press(Message::HidePopUp)
             .style(cancel_button),
-        horizontal_space().width(20),
+        space().width(20),
         button(Text::new("Ok").shaping(Shaping::Advanced))
             .on_press(on_press)
             .style(validate_button)

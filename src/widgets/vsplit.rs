@@ -172,7 +172,7 @@ where
     }
 
     fn layout(
-        &self,
+        &mut self,
         tree: &mut Tree,
         renderer: &Renderer,
         limits: &Limits,
@@ -214,13 +214,13 @@ where
         };
 
         let children = vec![
-            self.children[0].as_widget().layout(
+            self.children[0].as_widget_mut().layout(
                 &mut tree.children[0],
                 renderer,
                 &start_limits,
             ),
             self.children[1]
-                .as_widget()
+                .as_widget_mut()
                 .layout(&mut tree.children[1], renderer, &end_limits)
                 .translate(Vector::new(offset_width, offset_height)),
         ];
@@ -449,20 +449,21 @@ where
     }
 
     fn operate(
-        &self,
+        &mut self,
         tree: &mut Tree,
         layout: Layout<'_>,
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        operation.container(None, layout.bounds(), &mut |operation| {
+        operation.container(None, layout.bounds());
+        operation.traverse(&mut |operation| {
             self.children
-                .iter()
+                .iter_mut()
                 .zip(&mut tree.children)
                 .zip(layout.children())
                 .for_each(|((child, state), layout)| {
                     child
-                        .as_widget()
+                        .as_widget_mut()
                         .operate(state, layout, renderer, operation);
                 });
         });
@@ -482,7 +483,7 @@ where
 }
 
 #[derive(Clone, Copy)]
-struct Style {
+pub struct Style {
     color: Color,
     width: Pixels,
     radius: Radius,

@@ -5,8 +5,8 @@ use iced::advanced::text::Shaping;
 use iced::{
     padding,
     widget::{
-        button, column, container, horizontal_space, mouse_area, row, svg,
-        text::Wrapping, vertical_rule, Text,
+        button, column, container, mouse_area, row, rule, space, svg, text::Wrapping,
+        Text,
     },
     Alignment, Element, Length, Radians,
 };
@@ -274,13 +274,13 @@ impl Dir {
                 );
 
             col = col.push(row![
-                horizontal_space().width(INDENT),
-                column![vertical_rule(1.0)]
+                space().width(INDENT),
+                column![rule::vertical(1.0)]
                     .padding(padding::top(HEIGHT * 0.5 - 1.5).bottom(HEIGHT * 0.5 - 1.5))
                     .align_x(Alignment::Center)
                     .width(Length::Shrink)
                     .height(height),
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 ch
             ]);
         }

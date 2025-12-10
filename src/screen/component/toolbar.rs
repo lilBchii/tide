@@ -5,9 +5,10 @@ use crate::file_manager::export::ExportType;
 use crate::file_manager::import::UploadType;
 use iced::advanced::text::Shaping;
 use iced::widget::tooltip;
-use iced::widget::{button, horizontal_space, row, svg, Button, Text};
+use iced::widget::{button, row, space, svg, Button, Text};
+use iced::Length::Fill;
 use iced::{alignment, Element, Length, Theme};
-use iced_aw::menu::{Item, Menu};
+use iced_aw::menu::Menu;
 use iced_aw::{menu_bar, menu_items};
 use open::that;
 use std::sync::LazyLock;
@@ -100,24 +101,24 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
     let menu_bar = menu_bar!(
         (text_button("File", Message::DropDownMenu, MENU_BUTTON_SIZE), {
             menu_tpl_1(menu_items!(
-                (menu_button("New File",Message::NewFile))
-                (menu_button("Open File", Message::OpenFile))
-                (menu_button("New Project", Message::NewProject))
-                (menu_button("Open Project", Message::OpenProject(None, None)))
-                (menu_button("Upload File", Message::Upload(UploadType::All, None)))
-                (menu_button("Save", Message::SaveFile(true)))
-                (menu_button("Save as", Message::SaveFile(true)))
+                (menu_button("New File",Message::NewFile)),
+                (menu_button("Open File", Message::OpenFile)),
+                (menu_button("New Project", Message::NewProject)),
+                (menu_button("Open Project", Message::OpenProject(None, None))),
+                (menu_button("Upload File", Message::Upload(UploadType::All, None))),
+                (menu_button("Save", Message::SaveFile(true))),
+                (menu_button("Save as", Message::SaveFile(true))),
                 (menu_button("Export as", Message::DropDownMenu), menu_tpl_1(menu_items!(
-                    (menu_button("PDF", Message::Export(ExportType::PDF)))
-                    (menu_button("SVG", Message::Export(ExportType::SVG)))
-                    (menu_button("Template", Message::Export(ExportType::Template)))
-                )))
-                (menu_button("Add Local Template", Message::AddTemplate))
+                    (menu_button("PDF", Message::Export(ExportType::PDF))),
+                    (menu_button("SVG", Message::Export(ExportType::SVG))),
+                    (menu_button("Template", Message::Export(ExportType::Template))),
+                ))),
+                (menu_button("Add Local Template", Message::AddTemplate)),
                 (menu_button("Start from Template", Message::StartFromTemplate))
             )).width(240.0)
-        })
+        }),
         (text_button("View", Message::DropDownMenu, MENU_BUTTON_SIZE), menu_tpl_1(menu_items!(
-            (menu_button("Theme", Message::ChangeTheme))
+            (menu_button("Theme", Message::ChangeTheme)),
             (menu_button("Invert", Message::TogglePreview))
         )).width(240.0))
     );
@@ -144,16 +145,16 @@ pub fn editing_toolbar<'a>(main_path: Option<&VirtualPath>) -> Element<'a, Messa
         text_button("Preview", Message::ForcePreview, PREVIEW_BUTTON_SIZE);
 
     let r = row![
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
         menu_bar,
-        horizontal_space(),
+        space().width(Fill),
         preview_button,
         main_file_path,
-        horizontal_space(),
+        space().width(Fill),
         universe_button,
         help_button,
         export_button,
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
     .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)
@@ -177,13 +178,13 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
     let menu_bar = menu_bar!(
         (text_button("File", Message::DropDownMenu, MENU_BUTTON_SIZE), {
             menu_tpl_1(menu_items!(
-                (menu_button("New File",Message::NewFile))
-                (menu_button("Open File", Message::OpenFile))
-                (menu_button("New Project", Message::NewProject))
-                (menu_button("Open Project", Message::OpenProject(None, None)))
-                (menu_button("Start from Template", Message::StartFromTemplate))
+                (menu_button("New File",Message::NewFile)),
+                (menu_button("Open File", Message::OpenFile)),
+                (menu_button("New Project", Message::NewProject)),
+                (menu_button("Open Project", Message::OpenProject(None, None))),
+                (menu_button("Start from Template", Message::StartFromTemplate)),
             )).width(240.0)
-        })
+        }),
         (text_button("View", Message::DropDownMenu, MENU_BUTTON_SIZE), menu_tpl_1(menu_items!(
             (menu_button("Theme", Message::ChangeTheme))
         )).width(240.0))
@@ -198,13 +199,13 @@ pub fn welcome_toolbar<'a>() -> Element<'a, Message> {
     let help_button = icon_button(TYPST_DOCS_ICON.clone(), "Help", Message::Help);
 
     let r = row![
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
         menu_bar,
-        horizontal_space(),
-        horizontal_space(),
+        space().width(Fill),
+        space().width(Fill),
         universe_button,
         help_button,
-        horizontal_space().width(TOOLBAR_SPACING),
+        space().width(TOOLBAR_SPACING),
     ]
     .align_y(alignment::Alignment::Center)
     .height(ICON_BUTTON_SIZE + TOOLBAR_PADDING * 2.0)

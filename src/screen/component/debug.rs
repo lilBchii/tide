@@ -2,7 +2,7 @@ use crate::data::style::button::validate_button;
 use crate::data::style::debug::debug_container_style;
 use iced::widget::text::Shaping;
 use iced::widget::{
-    button, column, container, opaque, row, text, Scrollable, Space, Text,
+    button, column, container, opaque, row, space, text, Scrollable, Text,
 };
 use iced::{Element, Fill};
 
@@ -31,7 +31,7 @@ impl DebugZone {
         opaque(
             container(column![
                 row![
-                    Space::with_width(Fill),
+                    space().width(Fill),
                     button(Text::new("X").shaping(Shaping::Advanced))
                         .on_press(Message::HideErrors)
                         .style(validate_button),

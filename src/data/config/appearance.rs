@@ -29,7 +29,7 @@ pub struct GeneralConfig {
     /// Default font size for UI elements.
     pub font_size: f32,
     /// Scale factor for high-DPI displays.
-    pub window_scale_factor: f64,
+    pub window_scale_factor: f32,
 }
 
 /// Configuration specific to the text editor component.

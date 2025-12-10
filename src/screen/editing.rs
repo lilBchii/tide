@@ -35,9 +35,7 @@ use crate::{
     font::EDITOR_FONT_FAMILY_NAME,
 };
 use crate::{file_manager::export::template::export_template, widgets::vsplit};
-use iced::widget::center;
 use iced::widget::text_editor::Edit;
-use iced::Length::Fixed;
 use iced::{
     advanced::svg::Handle,
     widget::{
@@ -49,8 +47,6 @@ use iced::{
     Length::Fill,
     Shrink, Task,
 };
-use iced_aw::style::selection_list::primary;
-use iced_aw::SelectionList;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
@@ -282,7 +278,7 @@ impl Editing {
             )
             .font(Font::with_name(EDITOR_FONT_FAMILY_NAME));
 
-        let cursor_pos = self.current.buffer.content.cursor_position();
+        let cursor_pos = self.current.buffer.content.cursor().position;
 
         let (split_left, split_right) = self.split_at;
         let (tree, _h) = self.file_tree.view();
@@ -298,7 +294,7 @@ impl Editing {
         let mut main_screen =
             Split::new(file_tree, edit_col, self.split_at.0, Message::ResizeTree)
                 .strategy(vsplit::Strategy::Start)
-                .direction(vsplit::Direction::Horizontal);
+                .direction(vsplit::Direction::Vertical);
         // .split_at(split_left)
         // .on_resize(Message::ResizeTree); //VSplit without preview
 
@@ -311,10 +307,14 @@ impl Editing {
                 Scrollable::new(Column::with_children(svg_pages).spacing(15).padding(15))
                     .width(Fill)
                     .height(Fill);
-            main_screen =
-                Split::new(main_screen, preview, self.split_at.1, Message::ResizeTree)
-                    .strategy(vsplit::Strategy::Start)
-                    .direction(vsplit::Direction::Horizontal);
+            main_screen = Split::new(
+                main_screen,
+                preview,
+                self.split_at.1,
+                Message::ResizePreview,
+            )
+            .strategy(vsplit::Strategy::Start)
+            .direction(vsplit::Direction::Vertical);
             // .split_at(split_right)
             // .on_resize(Message::ResizePreview);
         } //VSplit with preview
@@ -442,10 +442,13 @@ impl Editing {
             Message::Autocomplete => {
                 if let Some(current_file_id) = self.current_file_id() {
                     self.update_source(current_file_id, self.current_buffer().clone());
-                    let (line, shift) = self.current_buffer().content.cursor_position();
+                    let cursor_position = self.current_buffer().content.cursor().position;
                     if let Ok(source) = self.typst.source(self.current_file_id().unwrap())
                     {
-                        let index = source.line_column_to_byte(line, shift);
+                        let index = source.line_column_to_byte(
+                            cursor_position.line,
+                            cursor_position.column,
+                        );
                         println!("{:?}", self.typst);
                         println!(
                             "autocompletion for {:?}/len:{}",
@@ -454,7 +457,7 @@ impl Editing {
                         );
                         println!(
                             "line: {} / shift: {} | index: {:?}",
-                            line, shift, index
+                            cursor_position.line, cursor_position.column, index
                         );
                         if let Some(cursor_index) = index {
                             let Some((pos, completions)) =

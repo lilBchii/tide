@@ -6,9 +6,9 @@ repository = "https://github.com/lilBchii/tide"
 
 [dependencies]
 # GUI
-iced = { git = "https://github.com/iced-rs/iced.git", branch = "master", features = ["tokio", "image", "svg", "advanced", "tiny-skia"] }
+iced = { version = "0.14", features = ["tokio", "image", "svg", "advanced", "tiny-skia"] }
 rfd = { version = "0.15.3", features = ["xdg-portal"] }
-iced_aw = { version = "0.12.2", features = ["menu", "selection_list"] }
+iced_aw = { version = "0.13.0", features = ["menu", "selection_list"] }
 open = "5.3.2"
 # CONFIG
 serde = { version = "1.0.219", features = ["derive"] }

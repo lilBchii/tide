@@ -7,7 +7,8 @@ use crate::file_manager::import::TEMPLATE;
 use crate::screen::component::modal;
 use crate::screen::component::modal::ProjectModal;
 use iced::advanced::text::Shaping;
-use iced::widget::{button, horizontal_space, row, stack, svg, text, vertical_space};
+use iced::widget::{button, row, space, stack, svg, text};
+use iced::Length::Fill;
 use iced::{
     widget::{column, container},
     Alignment, Element, Length, Task,
@@ -114,17 +115,17 @@ impl Welcome {
             text("Getting started")
                 .shaping(Shaping::Advanced)
                 .size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
             welcome_button(
                 "New Project",
                 Message::ToolBar(toolbar::Message::NewProject),
             ),
-            vertical_space().height(10),
+            space().height(10),
             welcome_button(
                 "Start from template",
                 Message::ToolBar(toolbar::Message::StartFromTemplate),
             ),
-            vertical_space().height(10),
+            space().height(10),
             text("More options in “File” button of the tool bar.")
                 .shaping(Shaping::Advanced)
         ]);
@@ -133,9 +134,9 @@ impl Welcome {
             text("Shortcuts")
                 .shaping(Shaping::Advanced)
                 .size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
             row![
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 column![
                     text("Open File").shaping(Shaping::Advanced),
                     text("New Project").shaping(Shaping::Advanced),
@@ -146,7 +147,7 @@ impl Welcome {
                     text("Select All").shaping(Shaping::Advanced),
                 ]
                 .align_x(Alignment::End),
-                horizontal_space().width(SPACING),
+                space().width(SPACING),
                 column![
                     text("Ctrl+O").shaping(Shaping::Advanced),
                     text("Ctrl+N").shaping(Shaping::Advanced),
@@ -164,7 +165,7 @@ impl Welcome {
             text("Recent Projects")
                 .shaping(Shaping::Advanced)
                 .size(H2_FONT_SIZE),
-            vertical_space().height(TITLE_SPACING),
+            space().height(TITLE_SPACING),
         ];
         for project in self.recent_files.iter() {
             let dir = project.root_path.to_owned();
@@ -186,9 +187,9 @@ impl Welcome {
 
         let r = row![
             getting_started,
-            horizontal_space(),
+            space().width(Fill),
             shortcuts,
-            horizontal_space()
+            space().width(Fill)
         ];
         let c = container(
             column![title, r, recent_container]

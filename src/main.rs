@@ -52,7 +52,7 @@ struct Tide {
     /// The current theme used across the application UI.
     theme: Theme,
     /// The factor used to scale UI elements based on the display.
-    window_scale_factor: f64,
+    window_scale_factor: f32,
     /// The configuration settings loaded from a TOML file.
     config: Config,
 }
@@ -80,7 +80,7 @@ impl Tide {
     //as this is still an opened issue,
     //the best choice is to leave scale factor at 1.0 by default and let the user change it in
     //the application configuration if winit is unable to find it
-    fn scale_factor(&self) -> f64 {
+    fn scale_factor(&self) -> f32 {
         self.window_scale_factor
     }
 
