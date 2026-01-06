@@ -1,15 +1,10 @@
 use super::component::{
-    file_tree::{self, FileTree},
+    file_tree::{self},
     modal, pop_up,
     preview::Preview,
     toolbar::{self, editing_toolbar, open_url},
 };
 
-use crate::file_manager::export::template::export_template;
-use crate::file_manager::file::{
-    cache_project, get_templates_path, load_file_dialog, save_file_dialog,
-    save_file_disk, ProjectCache,
-};
 use crate::file_manager::import::{UploadType, ALL_TYPES, TEMPLATE};
 use crate::screen::component::modal::{FileModal, ProjectModal};
 use crate::screen::component::pop_up::{PopUpElement, PopUpType};
@@ -32,6 +27,17 @@ use crate::{editor::buffer::Buffer, file_manager::import::load::load_file};
 use crate::{
     file_manager::export::svg::{export_svg, preview_svg},
     font::EDITOR_FONT_FAMILY_NAME,
+};
+use crate::{
+    file_manager::export::template::export_template,
+    screen::component::file_tree::view_file_tree,
+};
+use crate::{
+    file_manager::file::{
+        cache_project, get_templates_path, load_file_dialog, save_file_dialog,
+        save_file_disk, ProjectCache,
+    },
+    screen::component::file_tree::FileTree,
 };
 use iced::{
     advanced::svg::Handle,
@@ -107,7 +113,7 @@ impl Editing {
             buffers: HashMap::new(),
             current_dir: current_dir.clone(),
             preview: Preview::new(),
-            file_tree: FileTree::new(current_dir.to_path_buf()),
+            file_tree: FileTree::new(&current_dir, None, None),
             typst: init_world(),
             auto_pairs: config.auto_pairs,
             split_at: (250.0, 800.0),
@@ -175,7 +181,7 @@ impl Editing {
         //remove file from Typst world
         self.typst.remove_file(id);
         //remove file from file tree
-        self.file_tree.refresh();
+        //self.file_tree.refresh();
         Ok(())
     }
 
@@ -201,7 +207,7 @@ impl Editing {
         //load in the editor and Typst
         let imported_file = load_file(&file_path, &self.current_dir)?;
         self.typst.add_file(imported_file);
-        self.file_tree.add_file(&file_path);
+        //self.file_tree.add_file(&file_path);
 
         Ok(())
     }
@@ -225,7 +231,6 @@ impl Editing {
     /// Composes the file tree, text editor, preview (if available), status bar,
     /// and optional modals or pop-ups.
     pub fn view(&self) -> Element<'_, Message> {
-        //let tool_bar = self.tool_bar.view().map(Message::ToolBar);
         let tool_bar =
             editing_toolbar(Some(self.typst.main().vpath())).map(Message::ToolBar);
         let editor = TextEditor::new(&self.current_buffer().content)
@@ -279,22 +284,22 @@ impl Editing {
             .font(Font::with_name(EDITOR_FONT_FAMILY_NAME));
 
         let cursor_pos = self.current.buffer.content.cursor().position;
-
         //let (split_left, split_right) = self.split_at;
-        let (tree, _h) = self.file_tree.view();
 
-        let file_tree = Scrollable::new(tree.map(Message::FileTree));
+        let file_tree = view_file_tree(&self.file_tree).map(Message::FileTree);
 
         let mut edit_col = Column::new().push(editor);
         if let Some(debug) = &self.debug {
             edit_col = edit_col.push(view_errors(debug));
         } //debug
 
-        let mut main_screen =
-            Split::new(file_tree, edit_col, self.split_at.0, Message::ResizeTree)
-                .strategy(vsplit::Strategy::Start);
-        // .split_at(split_left)
-        // .on_resize(Message::ResizeTree); //VSplit without preview
+        let mut main_screen = Split::new(
+            file_tree,
+            edit_col,
+            self.split_at.0.max(200.0),
+            Message::ResizeTree,
+        )
+        .strategy(vsplit::Strategy::Start);
 
         if let Some(svg_handles) = &self.preview.handle {
             let mut svg_pages = vec![];
@@ -385,7 +390,7 @@ impl Editing {
                         if self.pop_up.is_none() {
                             self.pop_up = Some(pop_up_element);
                         } else {
-                            println!("other pop-up..."); //todo: if there are several pop-ups in a row, put them in a queue!
+                            println!("other pop-up..."); // TODO: if there are several pop-ups in a row, put them in a queue!
                         }
                         Task::none()
                     }
@@ -394,7 +399,13 @@ impl Editing {
                         Task::none()
                     }
                     pop_up::Message::DeleteFile(id) => match self.delete_file(id) {
-                        Ok(_) => Task::done(Message::PopUp(pop_up::Message::HidePopUp)),
+                        Ok(_) => {
+                            // TODO: should never panic but make it cleaner !!
+                            self.file_tree.delete_file(
+                                &id.vpath().resolve(&self.current_dir).unwrap(),
+                            );
+                            Task::done(Message::PopUp(pop_up::Message::HidePopUp))
+                        }
                         Err(err) => Task::done(Message::PopUp(
                             pop_up::Message::ShowPopUp(PopUpElement::new(
                                 PopUpType::Error,
@@ -646,7 +657,7 @@ impl Editing {
                         };
                         // change current dir, reset the file tree, reset "new file" modal
                         self.current_dir = path.clone();
-                        self.file_tree = FileTree::new(path.to_path_buf());
+                        self.file_tree = FileTree::new(&path, main.clone(), None);
                         self.file_modal = FileModal::new(path.to_path_buf());
 
                         // load files in TideWorld
@@ -659,9 +670,9 @@ impl Editing {
                         Task::perform(
                             cache_project(ProjectCache::new(
                                 self.current_dir.to_owned(),
-                                main.to_owned(),
+                                main.clone(),
                             )),
-                            move |_| Message::CachedProject(main.to_owned()),
+                            move |()| Message::CachedProject(main.clone()),
                         )
                     }
                     // TODO: write the real open file
@@ -838,9 +849,9 @@ impl Editing {
                                         )),
                                         move |_| Message::CachedProject(None),
                                     ),
-                                    Task::done(Message::FileTree(
-                                        file_tree::Message::FileExit,
-                                    )),
+                                    // Task::done(Message::FileTree(
+                                    //     file_tree::Message::Exit,
+                                    // )),
                                 ]);
                             }
                             None => {
@@ -857,10 +868,6 @@ impl Editing {
                             }
                         }
                     }
-                    file_tree::Message::FileExit => self.file_tree.change_clicked(None),
-                    file_tree::Message::FileClick(path) => {
-                        self.file_tree.change_clicked(Some(path));
-                    }
                     file_tree::Message::DeleteFile(path) => {
                         if let Some(id) =
                             TideWorld::id_from_path(&path, &self.current_dir)
@@ -873,10 +880,31 @@ impl Editing {
                                 )),
                             ));
                         }
-                        return Task::done(Message::FileTree(
-                            file_tree::Message::FileExit,
-                        ));
                     }
+                    // TODO
+                    file_tree::Message::DeleteDirectory(path) => {
+                        if let Some(id) =
+                            TideWorld::id_from_path(&path, &self.current_dir)
+                        {
+                            return Task::done(Message::PopUp(
+                                pop_up::Message::ShowPopUp(PopUpElement::new(
+                                    PopUpType::Confirm(id),
+                                    "Want to delete directory".to_string(),
+                                    path.to_string_lossy().to_string(),
+                                )),
+                            ));
+                        }
+                    }
+                    file_tree::Message::Expand(path) => {
+                        self.file_tree.expanded_path = Some(path);
+                    }
+                    file_tree::Message::Dismiss => {
+                        self.file_tree.expanded_path = None;
+                    }
+                    file_tree::Message::AddFile(path) => {
+                        println!("{:?}", path);
+                    }
+                    _ => {}
                 }
                 Task::none()
             }
@@ -948,6 +976,27 @@ fn view_status_bar<'a>(
     .align_y(Alignment::Center)
     .into()
 }
+
+// fn view_confirm_modal<'a>(
+//     title: &'a str,
+//     content: &'a str,
+//     on_confirm: Message,
+// ) -> Element<'a, Message> {
+//     container(column![
+//         text(title).center(),
+//         text(content)
+//             .align_x(Alignment::Start)
+//             .align_y(Alignment::Center),
+//         row![
+//             horizontal_space().width(Length::Fill),
+//             button("Cancel").on_press(Message::HideModal),
+//             button("Confirm").on_press(on_confirm)
+//         ]
+//         .align_y(Alignment::Center)
+//     ])
+//     .padding(4.0)
+//     .into()
+// }
 
 /// Initializes the [`TideWorld`] with a temporary, fake, main file.
 fn init_world() -> TideWorld {

@@ -71,6 +71,10 @@ pub fn image_file<'a>() -> Text<'a> {
     icon("\u{f1c5}")
 }
 
+pub fn plus<'a>() -> Text<'a> {
+    icon("\u{e80c}")
+}
+
 fn icon<'a>(codepoint: &'a str) -> Text<'a> {
     text(codepoint).font(Font::with_name("fontello"))
 }

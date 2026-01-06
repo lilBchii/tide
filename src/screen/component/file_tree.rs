@@ -1,26 +1,33 @@
-use std::path::PathBuf;
+use std::{
+    fs::read_dir,
+    path::{Path, PathBuf},
+};
 
 use crate::{
     data::style::{
-        button::toolbar_button,
-        file_tree::{main_style, selected_file},
+        button::{drop_down_menu_button, simple_button},
+        file_tree::{
+            direntry_button, direntry_selected_button, drop_down_bg, main_style,
+        },
         tooltip::tooltip_box,
     },
     icon,
+    widgets::menu::menu,
 };
 use iced::{
-    padding,
     widget::{
-        button, column, container, mouse_area, row, rule, space, text, text::Wrapping,
+        button, column, container, hover, row, scrollable, space, text, text::Wrapping,
         tooltip, Text,
     },
     Alignment, Element, Length,
 };
 
-const HEIGHT: f32 = 20.0;
+//use iced_aw::{drop_down, DropDown};
+use iced_palace::widget::ellipsized_text;
+
 const INDENT: f32 = 10.0;
 const SPACING: f32 = 5.0;
-const ICON_BUTTON_SIZE: f32 = 24.0;
+const PADDING: f32 = 4.0;
 
 /// Represents messages triggered by user interactions with the file tree.
 #[derive(Clone, Debug)]
@@ -31,68 +38,42 @@ pub enum Message {
     DirClick(PathBuf),
     /// Change the currently selected file to the one at the given path.
     ChangeCurrentFile(PathBuf),
-    /// Handle a file being right-clicked.
-    FileClick(PathBuf),
     /// Delete the file at the specified path.
     DeleteFile(PathBuf),
-    /// Triggered when the mouse exits a file item.
-    FileExit,
+    /// Delete the directory at the specified path.
+    DeleteDirectory(PathBuf),
+
+    Expand(PathBuf),
+    Dismiss,
+
+    AddFile(PathBuf),
+    AddDirectory(PathBuf),
 }
 
-/// Represents the interactive file tree UI component of Tide.
-///
-/// Stores and manages state related to the current directory structure,
-/// the selected and clicked files, and the main Typst file.
 pub struct FileTree {
-    /// Internal representation of the file system.
-    file_system: Dir,
-    /// Path to the file marked as the main Typst file.
+    directory: Directory,
     main_path: Option<PathBuf>,
-    /// Path to the currently selected file in the UI.
     pub selected_path: Option<PathBuf>,
-    /// Path to the file that was most recently clicked.
-    clicked_path: Option<PathBuf>,
+    // DropDown
+    pub expanded_path: Option<PathBuf>,
 }
 
 impl FileTree {
-    /// Creates a new [`FileTree`] rooted at the given directory path.
-    pub fn new(root_path: PathBuf) -> Self {
+    pub fn new(
+        root: &Path,
+        main_path: Option<PathBuf>,
+        selected_path: Option<PathBuf>,
+    ) -> Self {
+        let directory = match tree_build(root) {
+            Ok(dir) => dir,
+            Err(_) => Directory::new(root),
+        };
         Self {
-            file_system: Dir::new(root_path),
-            main_path: None,
-            selected_path: None,
-            clicked_path: None,
+            directory,
+            main_path,
+            selected_path,
+            expanded_path: None,
         }
-    }
-
-    /// Builds and returns the file tree view as an [`Element`].
-    ///
-    /// Returns the UI element and its height.
-    pub fn view(&self) -> (Element<'_, Message>, f32) {
-        self.file_system
-            .view(&self.clicked_path, &self.main_path, &self.selected_path)
-    }
-
-    /// Adds a file to the file tree.
-    ///
-    /// The file is inserted into the internal list of files and sorted alphabetically.
-    pub fn add_file(
-        &mut self,
-        path: &PathBuf,
-    ) {
-        let file = File::new(path);
-        if let Some(mut files) = self.file_system.files.clone() {
-            files.push(file);
-            files.sort_by(|a, b| a.name.cmp(&b.name));
-            self.file_system.files = Some(files.to_vec())
-        }
-    }
-
-    /// Refreshes file entries in the tree.
-    ///
-    /// Useful after a file has been deleted or modified externally.
-    pub fn refresh(&mut self) {
-        self.file_system.reload_files();
     }
 
     /// Toggles open/closed state of a directory node.
@@ -100,7 +81,23 @@ impl FileTree {
         &mut self,
         path: &PathBuf,
     ) {
-        self.file_system.update(path);
+        self.directory.update(path);
+    }
+
+    /// Deletes a file from the file Tree
+    pub fn delete_file(
+        &mut self,
+        file_path: &PathBuf,
+    ) {
+        self.directory.delete_file(file_path);
+    }
+
+    /// Deletes a directory from the file Tree
+    pub fn delete_directory(
+        &mut self,
+        dir_path: &PathBuf,
+    ) {
+        self.directory.delete_directory(dir_path);
     }
 
     /// Changes the main Typst file path.
@@ -108,391 +105,354 @@ impl FileTree {
     /// If the path is already the main file, no change is made.
     pub fn change_main(
         &mut self,
-        path: &PathBuf,
+        path: &Path,
     ) {
-        match self.main_path.clone() {
-            Some(current_path) if current_path != *path => {
-                self.main_path = Some(path.clone());
-            }
-            None => {
-                self.main_path = Some(path.clone());
-            }
-            _ => {}
-        }
+        self.main_path = Some(path.to_path_buf());
     }
 
     /// Changes the currently selected file.
     pub fn change_selected(
         &mut self,
-        path: &PathBuf,
+        path: &Path,
     ) {
-        match self.selected_path.clone() {
-            Some(current_path) if current_path != *path => {
-                self.selected_path = Some(path.clone());
-            }
-            None => {
-                self.selected_path = Some(path.clone());
-            }
-            _ => {}
-        }
+        self.selected_path = Some(path.to_path_buf());
     }
 
-    /// Changes the last clicked file (used for file actions).
-    pub fn change_clicked(
+    /// Adds a new empty directory to the tree
+    pub fn add_new_directory(
         &mut self,
-        path: Option<PathBuf>,
+        path: &PathBuf,
     ) {
-        match path {
-            None => self.clicked_path = None,
-            Some(path) => match self.clicked_path.clone() {
-                Some(current_path) if current_path != *path => {
-                    self.clicked_path = Some(path.clone());
-                }
-                None => {
-                    self.clicked_path = Some(path.clone());
-                }
-                _ => {}
-            },
-        }
+        self.directory.add_new_directory(path);
+    }
+
+    /// Adds a new empty directory to the tree
+    pub fn add_new_file(
+        &mut self,
+        path: &PathBuf,
+    ) {
+        self.directory.add_new_file(path);
     }
 }
 
-/// Represents a directory node in the file system tree.
-pub struct Dir {
-    /// The root path.
+struct Directory {
     path: PathBuf,
-    /// The name of the [Dir].
     name: String,
-    /// The subdirectories of the [Dir].
-    dirs: Option<Vec<Dir>>,
-    /// The files stored within the [Dir].
-    files: Option<Vec<File>>,
-    /// The expansion state.
+
+    directories: Vec<Directory>,
+    files: Vec<File>,
     is_open: bool,
 }
 
-impl Dir {
-    /// Creates a new [`Dir`] from the given path.
-    ///
-    /// Initializes the name and path. Child files and directories are not loaded.
-    fn new(path: PathBuf) -> Self {
-        let name = path.file_name().unwrap().to_str().unwrap();
-
+impl Directory {
+    fn new(root: &Path) -> Self {
         Self {
-            path: path.clone(),
-            name: name.into(),
-            dirs: None,
-            files: None,
+            path: root.to_path_buf(),
+            name: root.file_name().unwrap().to_string_lossy().to_string(),
+            directories: vec![],
+            files: vec![],
             is_open: false,
         }
     }
 
-    /// Updates the expansion state of the directory at the specified path.
-    ///
-    /// If the path matches this node, toggles its open state and loads children.
     fn update(
         &mut self,
         path: &PathBuf,
     ) {
         if &*self.path == path {
             self.is_open ^= true;
-
-            if self.is_open {
-                if self.dirs.is_none() {
-                    self.dirs = Some(self.init_dirs());
-                }
-
-                if self.files.is_none() {
-                    self.files = Some(self.init_files());
-                }
-            }
-        } else if let Some(dirs) = self.dirs.as_mut() {
-            dirs.iter_mut().for_each(|dir| dir.update(path));
+        } else if !self.directories.is_empty() {
+            self.directories.iter_mut().for_each(|dir| dir.update(path));
         }
     }
 
-    /// Reloads the files in this directory, refreshing the internal list.
-    fn reload_files(&mut self) {
-        if let Some(_files) = &self.files {
-            self.files = Some(self.init_files());
-        } else if let Some(dirs) = self.dirs.as_mut() {
-            dirs.iter_mut().for_each(|dir| dir.reload_files());
-        }
-    }
-
-    /// Recursively builds the view of this directory and its children.
-    ///
-    /// Returns an [`Element`] representing the tree structure and total height.
-    pub fn view(
-        &self,
-        clicked_path: &Option<PathBuf>,
-        main_path: &Option<PathBuf>,
-        selected_path: &Option<PathBuf>,
-    ) -> (Element<'_, Message>, f32) {
-        let mut col = column!(dir_button(
-            self.name.clone(),
-            Message::DirClick(self.path.clone()),
-            self.is_open
-        ));
-
-        let mut height = HEIGHT;
-
-        if self.is_open {
-            let ch =
-                column(
-                    self.dirs
-                        .as_ref()
-                        .unwrap()
-                        .iter()
-                        .map(|e| e.view(clicked_path, main_path, selected_path))
-                        .chain(self.files.as_ref().unwrap().iter().map(|f| {
-                            File::view(f, clicked_path, main_path, selected_path)
-                        }))
-                        .map(|(e, _h)| {
-                            height += HEIGHT;
-                            e
-                        }),
-                );
-
-            col = col.push(row![
-                space().width(INDENT),
-                column![rule::vertical(1.0)]
-                    .padding(padding::top(HEIGHT * 0.5 - 1.5).bottom(HEIGHT * 0.5 - 1.5))
-                    .align_x(Alignment::Center)
-                    .width(Length::Shrink)
-                    .height(height),
-                space().width(SPACING),
-                ch
-            ]);
-        }
-
-        (col.into(), height)
-    }
-
-    /// Initializes and returns the list of files in this directory.
-    ///
-    /// Files are sorted alphabetically (case-insensitive).
-    fn init_files(&self) -> Vec<File> {
-        match std::fs::read_dir(&self.path) {
-            Ok(files) => {
-                let mut files = files
-                    .filter_map(Result::ok)
-                    .filter(|file| file.file_type().is_ok_and(|t| t.is_file()))
-                    .map(|file| {
-                        let mut name = file.file_name();
-                        name.make_ascii_lowercase();
-
-                        (file, name)
-                    })
-                    .collect::<Vec<_>>();
-                files.sort_unstable_by(|(_, aname), (_, bname)| aname.cmp(bname));
-                files
-                    .iter()
-                    .map(|(entry, _)| File::new(&entry.path()))
-                    .collect()
-            }
-            Err(e) => {
-                println!("{} {:?}", e, self.path);
-                [].into()
-            }
-        }
-    }
-
-    /// Initializes and returns the list of subdirectories.
-    ///
-    /// Directories are sorted alphabetically (case-insensitive).
-    fn init_dirs(&self) -> Vec<Self> {
-        let Ok(dirs) = std::fs::read_dir(&self.path) else {
-            return [].into();
-        };
-        let mut dirs = dirs
-            .filter_map(Result::ok)
-            .filter(|file| file.file_type().is_ok_and(|t| t.is_dir()))
-            .map(|file| {
-                let mut name = file.file_name();
-                name.make_ascii_lowercase();
-
-                (file, name)
-            })
-            .collect::<Vec<_>>();
-        dirs.sort_unstable_by(|(_, aname), (_, bname)| aname.cmp(bname));
-        dirs.iter()
-            .map(|(entry, _)| Self::new(entry.path()))
-            .collect()
-    }
-}
-
-/// Represents a file node in the file system.
-#[derive(Clone)]
-pub struct File {
-    /// The file path.
-    path: PathBuf,
-    /// The file display name.
-    name: String,
-}
-
-impl File {
-    /// Creates a new [`File`] from the given path.
-    ///
-    /// Automatically assigns an icon based on file extension.
-    pub fn new(path: &PathBuf) -> Self {
-        let name = path.file_name().unwrap().to_str().unwrap();
-        Self {
-            path: path.into(),
-            name: name.into(),
-        }
-    }
-
-    /// Builds and returns the view for the file node.
-    /// Displays file name, icon, and optionally contextual actions (e.g. delete, mark main).
-    ///
-    /// Returns the element and its height.
-    pub fn view(
-        &self,
-        clicked_path: &Option<PathBuf>,
-        main_path: &Option<PathBuf>,
-        selected_path: &Option<PathBuf>,
-    ) -> (Element<'_, Message>, f32) {
-        match clicked_path {
-            Some(path) if self.path == *path => (
-                container(
-                    mouse_area(
-                        row![
-                            icon_button(
-                                icon::flag(),
-                                "Turn this file main",
-                                Message::ChangeMainFile(self.path.clone())
-                            ),
-                            icon_button(
-                                icon::trash(),
-                                "Delete this file",
-                                Message::DeleteFile(self.path.clone())
-                            )
-                        ]
-                        .align_y(Alignment::Center)
-                        .spacing(SPACING)
-                        .width(Length::Fill),
-                    )
-                    .on_exit(Message::FileExit),
-                )
-                .into(),
-                HEIGHT,
-            ),
-            _ => {
-                let icon = match self.path.extension() {
-                    Some(ext) => match ext.to_str() {
-                        Some("png") | Some("jpg") | Some("jpeg") => icon::image_file(),
-                        Some("pdf") => icon::pdf_file(),
-                        Some("bib") | Some("toml") => icon::book(),
-                        _ => icon::text_file(),
-                    },
-                    None => icon::text_file(),
-                };
-                let mut row =
-                    row![icon, text(self.name.clone()).wrapping(Wrapping::None)]
-                        .align_y(Alignment::Center)
-                        .width(Length::Fill)
-                        .spacing(SPACING);
-
-                if let Some(path) = main_path {
-                    if *path == self.path {
-                        row = row.push(
-                            text(" (main)").wrapping(Wrapping::None).style(main_style),
-                        );
-                    }
-                }
-                if let Some(path) = selected_path {
-                    if self.path == *path {
-                        (
-                            container(
-                                mouse_area(row)
-                                    .on_press(Message::ChangeCurrentFile(
-                                        self.path.clone(),
-                                    ))
-                                    .on_right_press(Message::FileClick(
-                                        self.path.clone(),
-                                    )),
-                            )
-                            .style(selected_file)
-                            .into(),
-                            HEIGHT,
-                        )
-                    } else {
-                        (
-                            container(
-                                mouse_area(row)
-                                    .on_press(Message::ChangeCurrentFile(
-                                        self.path.clone(),
-                                    ))
-                                    .on_right_press(Message::FileClick(
-                                        self.path.clone(),
-                                    )),
-                            )
-                            .into(),
-                            HEIGHT,
-                        )
-                    }
-                } else {
-                    (
-                        container(
-                            mouse_area(row)
-                                .on_press(Message::ChangeCurrentFile(self.path.clone()))
-                                .on_right_press(Message::FileClick(self.path.clone())),
-                        )
-                        .into(),
-                        HEIGHT,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/// Creates a clickable button representing a directory.
-///
-/// Displays the name and toggle arrow based on open state.
-fn dir_button<'a, Message: Clone + 'a>(
-    name: String,
-    on_press: Message,
-    is_open: bool,
-) -> Element<'a, Message> {
-    mouse_area(
-        row![
-            space().width(10),
-            if is_open {
-                icon::open_dir()
+    fn delete_file(
+        &mut self,
+        file_path: &PathBuf,
+    ) {
+        if let Some(dir_path) = file_path.parent() {
+            if dir_path == self.path {
+                self.files.retain(|file| &file.path != file_path);
             } else {
-                icon::close_dir()
+                self.directories
+                    .iter_mut()
+                    .for_each(|dir| dir.delete_file(file_path));
             }
-            .width(18),
-            text(name).wrapping(Wrapping::Word)
-        ]
+        }
+    }
+
+    fn delete_directory(
+        &mut self,
+        dir_path: &PathBuf,
+    ) {
+        if let Some(parent_path) = dir_path.parent() {
+            if parent_path == self.path {
+                self.directories.retain(|dir| &dir.path != dir_path);
+            } else {
+                self.directories
+                    .iter_mut()
+                    .for_each(|dir| dir.delete_directory(dir_path));
+            }
+        }
+    }
+
+    fn add_new_file(
+        &mut self,
+        file_path: &PathBuf,
+    ) {
+        if let Some(dir_path) = file_path.parent() {
+            if dir_path == self.path {
+                self.files.push(File {
+                    name: file_path.file_name().unwrap().to_string_lossy().to_string(), // TODO: remove unwrap
+                    path: file_path.to_path_buf(),
+                });
+                self.files.sort_by(|a, b| a.name.cmp(&b.name));
+            } else {
+                self.directories
+                    .iter_mut()
+                    .for_each(|dir| dir.add_new_file(file_path));
+            }
+        }
+    }
+
+    fn add_new_directory(
+        &mut self,
+        dir_path: &PathBuf,
+    ) {
+        if let Some(parent_path) = dir_path.parent() {
+            if parent_path == self.path {
+                self.directories.push(Directory::new(dir_path));
+                self.directories.sort_by(|a, b| a.name.cmp(&b.name));
+            } else {
+                self.directories
+                    .iter_mut()
+                    .for_each(|dir| dir.add_new_directory(dir_path));
+            }
+        }
+    }
+}
+
+struct File {
+    name: String,
+    path: PathBuf,
+}
+
+/// Recursively builds the tree from root path, which has to be a directory/folder
+fn tree_build(root: &Path) -> std::io::Result<Directory> {
+    let mut directory = Directory::new(root);
+
+    for entry in read_dir(root)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_file() {
+            directory.files.push(File {
+                name: entry.file_name().to_string_lossy().to_string(),
+                path: entry.path(),
+            })
+        } else if metadata.is_dir() {
+            directory.directories.push(tree_build(&entry.path())?);
+        }
+    }
+
+    directory.directories.sort_by(|a, b| a.name.cmp(&b.name));
+    directory.files.sort_by(|a, b| a.name.cmp(&b.name));
+
+    Ok(directory)
+}
+
+fn view_file<'a>(
+    file: &'a File,
+    main_path: &'a Option<PathBuf>,
+    selected_path: &'a Option<PathBuf>,
+) -> Element<'a, Message> {
+    let icon = match file.path.extension() {
+        Some(ext) => match ext.to_str() {
+            Some("png") | Some("jpg") | Some("jpeg") => icon::image_file(),
+            Some("pdf") => icon::pdf_file(),
+            Some("bib") | Some("toml") => icon::book(),
+            _ => icon::text_file(),
+        },
+        None => icon::text_file(),
+    };
+
+    let content = row![
+        icon.center(),
+        ellipsized_text(file.name.clone())
+            .wrapping(Wrapping::None)
+            .center()
+    ]
+    .push(main_path.as_ref().and_then(|path| {
+        (file.path == *path).then(|| {
+            text(" (main)")
+                .wrapping(Wrapping::None)
+                .style(main_style)
+                .center()
+        })
+    }))
+    .width(Length::Fill)
+    .align_y(Alignment::Center)
+    .spacing(SPACING);
+
+    // TODO: make text ellipsize before hover buttons to avoid unreadability
+    let hovered_content = row![
+        space().width(Length::Fill),
+        icon_button(
+            icon::trash(),
+            "Delete",
+            Message::DeleteFile(file.path.clone())
+        ),
+        icon_button(
+            icon::flag(),
+            "Mark as main",
+            Message::ChangeMainFile(file.path.clone())
+        )
+    ]
+    .align_y(Alignment::Center);
+
+    let mut file_button = button(content)
+        .on_press(Message::ChangeCurrentFile(file.path.clone()))
+        .style(direntry_button);
+
+    if let Some(selected_path) = selected_path {
+        if selected_path == &file.path {
+            file_button = file_button.style(direntry_selected_button);
+        }
+    }
+
+    hover(file_button, hovered_content)
+}
+
+fn view_directory<'a>(
+    directory: &'a Directory,
+    main_path: &'a Option<PathBuf>,
+    selected_path: &'a Option<PathBuf>,
+    extanded_path: &'a Option<PathBuf>,
+) -> Element<'a, Message> {
+    let hovered_parent = row![
+        space().width(Length::Fill),
+        icon_button(
+            icon::trash(),
+            "Delete",
+            Message::DeleteDirectory(directory.path.to_path_buf()),
+        ),
+        menu(
+            icon_button(
+                icon::plus(),
+                "New",
+                Message::Expand(directory.path.to_path_buf())
+            ),
+            container(
+                column![
+                    button("Add New File")
+                        .width(Length::Fill)
+                        .on_press(Message::AddFile(directory.path.to_path_buf()))
+                        .style(drop_down_menu_button),
+                    button("Add Directory")
+                        .width(Length::Fill)
+                        .on_press(Message::AddDirectory(directory.path.to_path_buf()))
+                        .style(drop_down_menu_button),
+                ]
+                .width(120.0)
+                .align_x(Alignment::Start)
+            )
+            .style(drop_down_bg),
+            extanded_path
+                .as_ref()
+                .is_some_and(|extanded_path| extanded_path == &directory.path)
+        )
+        .on_dismiss(Message::Dismiss)
+    ]
+    .align_y(Alignment::Center);
+
+    let parent = row![]
+        .width(Length::Fill)
         .align_y(Alignment::Center)
-        .width(Length::Fill),
+        .spacing(SPACING);
+
+    if directory.is_open {
+        let parent = parent
+            .push(icon::open_dir().center())
+            .push(text(directory.name.clone()).center());
+
+        let parent = button(parent)
+            .on_press(Message::DirClick(directory.path.clone()))
+            .style(direntry_button);
+
+        let parent = hover(parent, hovered_parent);
+
+        let inside = column(
+            directory
+                .directories
+                .iter()
+                .map(|sub_dir| {
+                    view_directory(sub_dir, main_path, selected_path, extanded_path)
+                })
+                .chain(
+                    directory
+                        .files
+                        .iter()
+                        .map(|file| view_file(file, main_path, selected_path)),
+                ),
+        );
+
+        let pretty = row![space().width(INDENT), inside]
+            .height(Length::Shrink)
+            .spacing(SPACING);
+
+        container(column![parent, pretty]).into()
+    } else {
+        let parent = button(
+            parent
+                .push(icon::close_dir().center())
+                .push(text(directory.name.clone()).center()),
+        )
+        .on_press(Message::DirClick(directory.path.clone()))
+        .style(direntry_button);
+
+        hover(parent, hovered_parent)
+    }
+}
+
+pub fn view_file_tree<'a>(tree: &'a FileTree) -> Element<'a, Message> {
+    container(
+        scrollable(view_directory(
+            &tree.directory,
+            &tree.main_path,
+            &tree.selected_path,
+            &tree.expanded_path,
+        ))
+        .direction(scrollable::Direction::Vertical(
+            scrollable::Scrollbar::new()
+                .scroller_width(PADDING)
+                .width(PADDING)
+                .spacing(SPACING),
+        )),
     )
-    .on_press(on_press)
+    .height(Length::Fill)
+    .padding(PADDING)
     .into()
 }
 
+/// Creates an icon-based button with a tooltip, styled for the toolbar.
+///
+/// `label` is the tooltip text displayed on hover,
+/// and `on_press` the message to emit when the button is pressed.
 fn icon_button<'a, Message: Clone + 'a>(
     icon: Text<'a>,
     label: &'a str,
     on_press: Message,
 ) -> Element<'a, Message> {
-    let action = button(
-        icon.width(ICON_BUTTON_SIZE)
-            .height(ICON_BUTTON_SIZE)
-            .center(),
-    )
-    .width(ICON_BUTTON_SIZE)
-    .height(ICON_BUTTON_SIZE)
-    .clip(true)
-    .style(toolbar_button)
-    .on_press(on_press)
-    .padding(4);
+    let action = button(icon.center())
+        .width(Length::Shrink)
+        .height(Length::Shrink)
+        .clip(true)
+        .style(simple_button);
 
-    tooltip(action, text(label), tooltip::Position::FollowCursor)
-        .gap(20)
-        .style(tooltip_box)
-        .into()
+    tooltip(
+        action.on_press(on_press),
+        text(label),
+        tooltip::Position::Bottom,
+    )
+    .style(tooltip_box)
+    .into()
 }

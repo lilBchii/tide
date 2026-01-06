@@ -4,7 +4,7 @@ use iced::{border, widget::container::Style, Theme};
 pub fn tooltip_box(theme: &Theme) -> Style {
     let palette = theme.extended_palette();
     Style {
-        background: Some(palette.primary.weak.color.into()),
+        background: Some(palette.primary.weak.color.scale_alpha(0.85).into()),
         text_color: Some(palette.primary.base.text),
         border: border::rounded(4),
         ..Default::default()
