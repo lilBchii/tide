@@ -21,51 +21,20 @@ pub fn autocomplete(
             .map(|c| c.label.as_str())
             .collect::<Vec<_>>()
     );
-    //log_completions(&completions);
 
-    let start = source.get(pos..cursor)?;
+    let start = &source.text()[pos..cursor];
 
     if !start.is_empty() && start.ne("") {
-        return complete_word(start, &completions).map(|c| (pos, c));
+        return Some(
+            (
+                pos,
+                completions.into_iter().filter(|c| c.label.starts_with(start)).collect()
+                //complete_word(start, &completions)
+            )
+        );
     }
 
     Some((pos, completions))
-}
-
-/// Filters completion suggestions based on the current word prefix.
-///
-/// Returns the list of matching completions, if any.
-fn complete_word(
-    word: &str,
-    available: &Vec<Completion>,
-) -> Option<Vec<Completion>> {
-    let mut completions = vec![];
-    for completion in available {
-        if completion.label.starts_with(word) {
-            completions.push(completion.clone());
-        }
-    }
-
-    log_completions(&completions);
-
-    Some(completions)
-}
-
-/// Logs the available completion suggestions for debugging purposes.
-fn log_completions(completions: &Vec<Completion>) {
-    println!("{} completions", completions.len());
-    for completion in completions {
-        match completion.kind {
-            CompletionKind::Syntax => (),
-            _ => {
-                println!("Kind: {:?}", completion.kind);
-                println!("Label: {:?}", completion.label);
-                println!("Apply: {:?}", completion.apply);
-                println!("Details: {:?}", completion.detail);
-                println!("\n");
-            }
-        }
-    }
 }
 
 #[cfg(test)]

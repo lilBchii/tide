@@ -14,7 +14,7 @@ use typst::layout::Abs;
 use typst::syntax::{FileId, Source, VirtualPath};
 use typst::text::{Font, FontBook, TextElem, TextSize};
 use typst::utils::LazyHash;
-use typst::{Library, World};
+use typst::{Library, World, LibraryExt};
 use typst_ide::IdeWorld;
 
 const LIBERTINUS_SERIF_REGULAR: &[u8] =
@@ -290,8 +290,8 @@ impl IdeWorld for TideWorld {
 /// Currently, sets the default text size.
 fn library() -> Library {
     let mut lib = Library::default();
-    lib.styles
-        .set(TextElem::set_size(TextSize(Abs::pt(11.0).into())));
+    // lib.styles
+    //     .set(TextElem::set_size(TextSize(Abs::pt(11.0).into())));
     //lib.styles.set(TextElem::set_font(FontList(...)));
     lib
 }

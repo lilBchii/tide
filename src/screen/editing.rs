@@ -42,12 +42,13 @@ use crate::{
 use iced::{
     advanced::svg::Handle,
     widget::{
-        button, column, container, row, space, stack, svg, text,
+        button, column, container, row, space, stack, svg, text, center,
         text_editor::{self, Action, Binding, Edit, Motion},
         Column, Scrollable, TextEditor,
     },
     Alignment, Element, Font, Length, Task,
 };
+use iced_aw::SelectionList;
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
@@ -335,22 +336,17 @@ impl Editing {
 
         let screen = column![tool_bar, main_screen, status_bar];
 
-        // if let Some(completions) = &self.autocompletion_ctx.completions {
-        //     let selection = center(
-        //         SelectionList::new_with(
-        //             completions,
-        //             Message::ApplyAutocomplete,
-        //             12.0,
-        //             5.0,
-        //             primary,
-        //             None,
-        //             Font::default(),
-        //         )
-        //         .width(Shrink)
-        //         .height(Fixed(100.0)),
-        //     );
-        //     return stack![screen, selection].into();
-        // } //autocomplete
+        if let Some(completions) = &self.autocompletion_ctx.completions {
+            let selection = center(
+                SelectionList::new(
+                    completions,
+                    Message::ApplyAutocomplete,
+                )
+                .width(Length::Shrink)
+                .height(Length::Fixed(100.0)),
+            );
+            return stack![screen, selection].into();
+        } //autocomplete
 
         if let Some(pop_up) = &self.pop_up {
             return stack![screen, pop_up.view().map(Message::PopUp)].into();
@@ -452,16 +448,11 @@ impl Editing {
                     let cursor_position = self.current_buffer().content.cursor().position;
                     if let Ok(source) = self.typst.source(self.current_file_id().unwrap())
                     {
-                        let index = source.line_column_to_byte(
+                        let index = source.lines().line_column_to_byte(
                             cursor_position.line,
                             cursor_position.column,
                         );
                         println!("{:?}", self.typst);
-                        println!(
-                            "autocompletion for {:?}/len:{}",
-                            source,
-                            source.len_bytes()
-                        );
                         println!(
                             "line: {} / shift: {} | index: {:?}",
                             cursor_position.line, cursor_position.column, index
